@@ -30,6 +30,9 @@ def create_app() -> FastAPI:
     from transports.chat_api import router as chat_router
     app.include_router(chat_router)
 
+    from transports.realtime_session import router as voice_router
+    app.include_router(voice_router)
+
     return app
 
 
