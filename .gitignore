@@ -36,3 +36,9 @@ supabase/.temp/
 
 # Local credentials (project-specific)
 preflight-data.md
+
+# GCP credentials (never commit — use OIDC in CI)
+*-key.json
+service-account*.json
+gcloud-key.json
+*.pem
