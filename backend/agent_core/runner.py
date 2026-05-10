@@ -69,7 +69,7 @@ def run_turn(
         return RunnerResult(assistant_message=reply, tool_calls=[], completed=False)
 
     client = get_openai()
-    model = os.getenv("OPENAI_CHAT_MODEL", "gpt-4o-mini")
+    model = os.getenv("OPENAI_CHAT_MODEL", "gpt-5-mini")
 
     messages: list[dict[str, Any]] = [{"role": "system", "content": SYSTEM_PROMPT}]
     messages.extend(history)
