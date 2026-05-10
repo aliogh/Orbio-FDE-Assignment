@@ -1,0 +1,12 @@
+{
+  "ES": [
+    "Madrid", "Barcelona", "Valencia", "Sevilla", "Zaragoza",
+    "Málaga", "Murcia", "Palma", "Bilbao", "Alicante",
+    "Córdoba", "Valladolid", "Vigo", "Gijón", "L'Hospitalet de Llobregat"
+  ],
+  "MX": [
+    "Ciudad de México", "Guadalajara", "Monterrey", "Puebla", "Tijuana",
+    "León", "Querétaro", "Mérida", "San Luis Potosí", "Aguascalientes",
+    "Cancún", "Toluca", "Hermosillo", "Saltillo", "Cuernavaca"
+  ]
+}
