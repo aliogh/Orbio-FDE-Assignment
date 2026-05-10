@@ -36,6 +36,23 @@ def _refusal_reply() -> str:
     return "Vamos a mantenernos en el tema. ¿Continuamos con el proceso?"
 
 
+_NARRATED_CALL_RE = __import__("re").compile(
+    r"complete_screening\s*\(\s*summary\s*=\s*['\"](?P<summary>[^'\"]+)['\"]\s*\)",
+    flags=__import__("re").IGNORECASE,
+)
+
+
+def _extract_narrated_summary(text: str) -> str | None:
+    """Detect when the model wrote `complete_screening(summary='...')` as text
+    instead of invoking the tool. Returns the captured summary or None."""
+    match = _NARRATED_CALL_RE.search(text or "")
+    return match.group("summary").strip() if match else None
+
+
+def _strip_narrated_call(text: str) -> str:
+    return _NARRATED_CALL_RE.sub("", text or "")
+
+
 def run_turn(
     *,
     conversation_id: str,
@@ -132,6 +149,28 @@ def run_turn(
 
         # No tool call — this is the final assistant text.
         final_text = guardrails.sanitize_output(msg.content or "")
+
+        # Safety net: some models occasionally narrate `complete_screening(summary='...')`
+        # in text instead of invoking the tool. If we detect that and the screening
+        # hasn't been finalised yet, force-invoke the tool server-side using the
+        # extracted summary text so the conversation actually closes out.
+        if not completed:
+            forced_summary = _extract_narrated_summary(final_text)
+            if forced_summary is not None:
+                handler = HANDLERS.get("complete_screening")
+                if handler is not None:
+                    forced_result = handler(ctx, {"summary": forced_summary})
+                    aggregated_tool_calls.append({
+                        "name": "complete_screening",
+                        "args": {"summary": forced_summary},
+                        "result": forced_result,
+                        "synthesized": True,
+                    })
+                    if forced_result.get("ok"):
+                        completed = True
+                    # Strip the narrated tool-call text from the user-visible reply
+                    final_text = _strip_narrated_call(final_text).strip()
+
         persistence.append_turn(
             conversation_id=conversation_id,
             role="assistant",
