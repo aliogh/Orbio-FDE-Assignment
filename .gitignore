@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Node
+node_modules/
+.next/
+out/
+.turbo/
+
+# Env
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# OS / IDE
+.DS_Store
+.vscode/
+.idea/
+
+# Coverage / build
+htmlcov/
+coverage/
+dist/
+build/
+*.egg-info/
+
+# Supabase local
+supabase/.branches/
+supabase/.temp/
+
+# Local credentials (project-specific)
+preflight-data.md
