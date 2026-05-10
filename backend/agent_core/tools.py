@@ -147,24 +147,67 @@ def _normalize_record_value(field_name: str, raw_value: str) -> Any | None:
     can't be normalized (caller treats this as a validation error)."""
     v = raw_value.strip()
     if field_name == "has_driver_license":
-        truthy = {"yes", "sí", "si", "true", "1"}
-        falsy = {"no", "false", "0"}
-        lower = v.lower()
-        if lower in truthy:
-            return True
-        if lower in falsy:
+        lower = v.strip().lower()
+        # Negative tokens first (more specific in Spanish — must precede positive
+        # check so "No tengo carnet" doesn't accidentally match "tengo" → True)
+        if any(tok in lower for tok in ["no ", "no,", "false", "0", "ningun", "no tengo"]) or lower in {
+            "no",
+            "false",
+            "0",
+        }:
             return False
+        if any(tok in lower for tok in ["sí", "si ", "si,", "yes", "true", "tengo", "claro", "por supuesto"]) or lower in {
+            "si",
+            "yes",
+            "true",
+            "1",
+        }:
+            return True
         return None
     if field_name == "city":
         result = service_areas.match_city(v)
         return result.canonical if result.matched else None
     if field_name == "start_date":
-        # Pydantic validator handles past-date rejection
+        # Try ISO first via Pydantic, then fall back to dateutil for natural-language
+        # dates (e.g. "1 de junio de 2026", "June 15th 2026", "el lunes").
+        import re as _re
+        from datetime import date as _date  # local import to avoid top-level pollution
+
         try:
-            ef = ExtractedFields(start_date=v)
-        except ValidationError:
+            from dateutil.parser import parse as _parse_date  # type: ignore[import-untyped]
+            from dateutil.parser import parserinfo as _parserinfo
+
+            class _SpanishParserInfo(_parserinfo):
+                MONTHS = [
+                    ("enero", "ene"),
+                    ("febrero", "feb"),
+                    ("marzo", "mar"),
+                    ("abril", "abr"),
+                    ("mayo", "may"),
+                    ("junio", "jun"),
+                    ("julio", "jul"),
+                    ("agosto", "ago"),
+                    ("septiembre", "sep", "sept"),
+                    ("octubre", "oct"),
+                    ("noviembre", "nov"),
+                    ("diciembre", "dic"),
+                ]
+
+            _ISO_RE = _re.compile(r"^\d{4}-\d{2}-\d{2}$")
+            if _ISO_RE.match(v):
+                # Pure ISO 8601 — parse without dayfirst to avoid day/month swap
+                parsed = _parse_date(v).date()
+            else:
+                # Natural language: try Spanish locale first, then default locale
+                try:
+                    parsed = _parse_date(v, parserinfo=_SpanishParserInfo(dayfirst=True), fuzzy=True).date()
+                except (ValueError, TypeError, OverflowError):
+                    parsed = _parse_date(v, dayfirst=True, fuzzy=True).date()
+        except (ValueError, TypeError, OverflowError):
             return None
-        return ef.start_date.isoformat()  # canonical ISO 8601, e.g. "2026-06-01"
+        if parsed < _date.today():
+            return None
+        return parsed.isoformat()
     if field_name == "prior_experience":
         # Free-form for the JSON column; no normalization
         return v

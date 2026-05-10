@@ -87,6 +87,39 @@ class TestRecordField:
         patch = fake_persistence.update_conversation.call_args.kwargs["patch"]
         assert patch["extracted_fields"]["has_driver_license"] is False
 
+    def test_has_driver_license_full_phrase_no(
+        self, ctx: ToolContext, fake_persistence: MagicMock
+    ) -> None:
+        result = handle_record_field(
+            ctx,
+            {"field": "has_driver_license", "value": "No, no tengo carnet", "confidence": 0.95},
+        )
+        assert result["ok"] is True
+        patch = fake_persistence.update_conversation.call_args.kwargs["patch"]
+        assert patch["extracted_fields"]["has_driver_license"] is False
+
+    def test_has_driver_license_full_phrase_yes(
+        self, ctx: ToolContext, fake_persistence: MagicMock
+    ) -> None:
+        result = handle_record_field(
+            ctx,
+            {"field": "has_driver_license", "value": "Sí, tengo carnet de conducir", "confidence": 0.95},
+        )
+        assert result["ok"] is True
+        patch = fake_persistence.update_conversation.call_args.kwargs["patch"]
+        assert patch["extracted_fields"]["has_driver_license"] is True
+
+    def test_start_date_natural_language(
+        self, ctx: ToolContext, fake_persistence: MagicMock
+    ) -> None:
+        result = handle_record_field(
+            ctx,
+            {"field": "start_date", "value": "1 de junio de 2026", "confidence": 0.95},
+        )
+        assert result["ok"] is True
+        patch = fake_persistence.update_conversation.call_args.kwargs["patch"]
+        assert patch["extracted_fields"]["start_date"] == "2026-06-01"
+
 
 class TestFlagInvalid:
     def test_returns_ok(self, ctx: ToolContext) -> None:
