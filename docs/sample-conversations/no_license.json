@@ -1,0 +1,25 @@
+{
+  "scenario": "no_license",
+  "transcript": [
+    {
+      "role": "user",
+      "content": "Hola soy Pedro"
+    },
+    {
+      "role": "assistant",
+      "content": "¡Hola Pedro! 👋 ¿Tienes carnet de conducir / licencia de conducir?"
+    },
+    {
+      "role": "user",
+      "content": "No, no tengo carnet"
+    },
+    {
+      "role": "assistant",
+      "content": "Gracias por tu honestidad, Pedro. Lo siento, necesitamos que los repartidores tengan carnet de conducir para avanzar. Te agradecemos el interés y te deseamos mucha suerte."
+    }
+  ],
+  "extracted_fields": {},
+  "qualified": false,
+  "disqualification_reason": "no_license",
+  "summary": null
+}

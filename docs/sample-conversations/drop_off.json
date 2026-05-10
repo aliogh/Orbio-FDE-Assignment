@@ -1,0 +1,27 @@
+{
+  "scenario": "drop_off",
+  "transcript": [
+    {
+      "role": "user",
+      "content": "Hola soy Marta"
+    },
+    {
+      "role": "assistant",
+      "content": "Hola Marta 👋 ¿Tienes carnet de conducir / licencia de conducir?"
+    },
+    {
+      "role": "user",
+      "content": "Sí tengo carnet"
+    },
+    {
+      "role": "assistant",
+      "content": "Perfecto, Marta. ✅ ¿En qué ciudad o zona vives? (Ej.: Madrid centro, Barcelona norte, Guadalajara)"
+    }
+  ],
+  "extracted_fields": {
+    "has_driver_license": true
+  },
+  "qualified": null,
+  "disqualification_reason": null,
+  "summary": null
+}

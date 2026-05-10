@@ -1,0 +1,88 @@
+{
+  "scenario": "ambiguous_recovery",
+  "transcript": [
+    {
+      "role": "user",
+      "content": "Hola"
+    },
+    {
+      "role": "assistant",
+      "content": "¡Hola! 👋 ¿Cómo te llamas?"
+    },
+    {
+      "role": "user",
+      "content": "Soy Carlos"
+    },
+    {
+      "role": "assistant",
+      "content": "Carlos, ¿tienes carnet de conducir / licencia de conducir?"
+    },
+    {
+      "role": "user",
+      "content": "Sí"
+    },
+    {
+      "role": "assistant",
+      "content": "Carlos, ¿en qué ciudad o zona vives?"
+    },
+    {
+      "role": "user",
+      "content": "En Madrid"
+    },
+    {
+      "role": "assistant",
+      "content": "Entonces, Madrid, ¿fines de semana, correcto?"
+    },
+    {
+      "role": "user",
+      "content": "no sé qué decirte"
+    },
+    {
+      "role": "assistant",
+      "content": "No pasa nada, Carlos. ¿Buscas jornada completa, parcial o solo fines de semana?"
+    },
+    {
+      "role": "user",
+      "content": "Tiempo completo"
+    },
+    {
+      "role": "assistant",
+      "content": "¿Prefieres turno de mañana, tarde, noche o eres flexible?"
+    },
+    {
+      "role": "user",
+      "content": "Tardes"
+    },
+    {
+      "role": "assistant",
+      "content": "Perfecto, Carlos. ¿Tienes experiencia previa entregando pedidos (años y plataformas, por ejemplo Glovo, Uber Eats)?"
+    },
+    {
+      "role": "user",
+      "content": "Cero experiencia"
+    },
+    {
+      "role": "assistant",
+      "content": "¿CUándo podrías empezar, Carlos?"
+    },
+    {
+      "role": "user",
+      "content": "Mañana"
+    },
+    {
+      "role": "assistant",
+      "content": "Carlos, no se pudo registrar \"mañana\". ¿Puedes indicar \"hoy\", \"mañana\" o una fecha concreta (p. ej. [redacted])?"
+    }
+  ],
+  "extracted_fields": {
+    "city": "Madrid",
+    "full_name": "Carlos",
+    "availability": "tiempo completo",
+    "prior_experience": "0 años, sin experiencia",
+    "has_driver_license": true,
+    "preferred_schedule": "tardes"
+  },
+  "qualified": null,
+  "disqualification_reason": null,
+  "summary": null
+}

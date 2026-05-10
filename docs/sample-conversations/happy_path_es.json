@@ -1,0 +1,72 @@
+{
+  "scenario": "happy_path_es",
+  "transcript": [
+    {
+      "role": "user",
+      "content": "Hola, soy Ana Pérez"
+    },
+    {
+      "role": "assistant",
+      "content": "Encantada, Ana 👋 ¿tienes carnet de conducir / licencia de conducir? (sí/no)"
+    },
+    {
+      "role": "user",
+      "content": "Sí, tengo carnet de conducir"
+    },
+    {
+      "role": "assistant",
+      "content": "Perfecto, Ana ✅ ¿En qué ciudad o zona estás?"
+    },
+    {
+      "role": "user",
+      "content": "Vivo en Madrid"
+    },
+    {
+      "role": "assistant",
+      "content": "Genial, Ana ✅ ¿Disponibilidad: jornada completa, parcial o solo fines de semana?"
+    },
+    {
+      "role": "user",
+      "content": "Tiempo completo"
+    },
+    {
+      "role": "assistant",
+      "content": "Perfecto, Ana ✅ ¿Horario preferido: mañana, tarde, noche o flexible?"
+    },
+    {
+      "role": "user",
+      "content": "Mañanas"
+    },
+    {
+      "role": "assistant",
+      "content": "Perfecto, Ana ✅ ¿Tienes experiencia previa como repartidora? Si es así, indica años y plataformas (Glovo, Uber Eats, etc.), o escribe \"no\" si no."
+    },
+    {
+      "role": "user",
+      "content": "Dos años en Glovo"
+    },
+    {
+      "role": "assistant",
+      "content": "Perfecto, Ana ✅ ¿Cuándo podrías empezar? (fecha aproximada está bien)"
+    },
+    {
+      "role": "user",
+      "content": "Puedo empezar el 1 de junio de 2026"
+    },
+    {
+      "role": "assistant",
+      "content": "Gracias, Ana. Sobre la fecha de inicio, el sistema pide hoy o una fecha futura cercana; ¿puedes confirmar una fecha de inicio que sea hoy o posterior?"
+    }
+  ],
+  "extracted_fields": {
+    "city": "Madrid",
+    "full_name": "Ana Pérez",
+    "availability": "tiempo completo",
+    "prior_experience": "2 años en Glovo",
+    "has_driver_license": true,
+    "preferred_schedule": "mañanas"
+  },
+  "qualified": null,
+  "disqualification_reason": null,
+  "summary": null
+}

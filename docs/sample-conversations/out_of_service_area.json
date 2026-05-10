@@ -1,0 +1,44 @@
+{
+  "scenario": "out_of_service_area",
+  "transcript": [
+    {
+      "role": "user",
+      "content": "Hola soy Lucía"
+    },
+    {
+      "role": "assistant",
+      "content": "¡Hola Lucía 👋! ¿Tienes carnet de conducir / licencia de conducir?"
+    },
+    {
+      "role": "user",
+      "content": "Sí tengo carnet"
+    },
+    {
+      "role": "assistant",
+      "content": "Perfecto, Lucía ✅ ¿En qué ciudad o zona vives?"
+    },
+    {
+      "role": "user",
+      "content": "Vivo en Atlantis"
+    },
+    {
+      "role": "assistant",
+      "content": "Lucía, ¿Atlantis? No está en nuestra cobertura. ¿En qué ciudad o zona vives? (ej. Madrid, Barcelona, CDMX, Guadalajara)"
+    },
+    {
+      "role": "user",
+      "content": "Vivo en una ciudad pequeña que no está en su lista, en Asturias"
+    },
+    {
+      "role": "assistant",
+      "content": "Lo siento, Lucía. Asturias está fuera de nuestra zona de reparto, así que no podemos continuar con tu candidatura. Gracias por tu interés y mucho éxito."
+    }
+  ],
+  "extracted_fields": {
+    "full_name": "Lucía",
+    "has_driver_license": true
+  },
+  "qualified": false,
+  "disqualification_reason": "out_of_service_area",
+  "summary": null
+}

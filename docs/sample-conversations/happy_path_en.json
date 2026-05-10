@@ -1,0 +1,73 @@
+{
+  "scenario": "happy_path_en",
+  "transcript": [
+    {
+      "role": "user",
+      "content": "Hi, I'm John Doe"
+    },
+    {
+      "role": "assistant",
+      "content": "Hi John 👋, do you have a valid driver's licence? It's required."
+    },
+    {
+      "role": "user",
+      "content": "Yes I have a driver's license"
+    },
+    {
+      "role": "assistant",
+      "content": "Great, John — I have you down as having a valid driver's licence ✅. Which city or zone are you located in?"
+    },
+    {
+      "role": "user",
+      "content": "I live in Barcelona"
+    },
+    {
+      "role": "assistant",
+      "content": "So, Barcelona, correct? ✅"
+    },
+    {
+      "role": "user",
+      "content": "Part time"
+    },
+    {
+      "role": "assistant",
+      "content": "John, which schedule do you prefer — morning, afternoon, night, or flexible?"
+    },
+    {
+      "role": "user",
+      "content": "Evenings"
+    },
+    {
+      "role": "assistant",
+      "content": "Perfect, John — evenings it is. How much delivery experience do you have, and on which platforms (Glovo, Uber Eats, etc.)?"
+    },
+    {
+      "role": "user",
+      "content": "One year on Uber Eats"
+    },
+    {
+      "role": "assistant",
+      "content": "John, when can you start?"
+    },
+    {
+      "role": "user",
+      "content": "I can start June 15th 2026"
+    },
+    {
+      "role": "assistant",
+      "content": "Perfect, John — resumo: tienes carné, vives en Barcelona, disponibilidad part-time por las tardes, 1 año en Uber Eats y puedes empezar el 15/06/2026. ✅  \nGracias — el equipo de selección revisará tu solicitud y te contactará con los siguientes pasos."
+    }
+  ],
+  "extracted_fields": {
+    "city": "Barcelona",
+    "full_name": "John Doe",
+    "start_date": "2026-06-15",
+    "availability": "part-time",
+    "prior_experience": "1 year on Uber Eats",
+    "has_driver_license": true,
+    "preferred_schedule": "evenings"
+  },
+  "qualified": true,
+  "disqualification_reason": null,
+  "summary": "John Doe has a valid driver's licence, is located in Barcelona, available part-time for evenings, has 1 year of experience on Uber Eats, and can start on 2026-06-15."
+}

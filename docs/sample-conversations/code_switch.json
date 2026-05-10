@@ -1,0 +1,72 @@
+{
+  "scenario": "code_switch",
+  "transcript": [
+    {
+      "role": "user",
+      "content": "Hola, my name is Maria"
+    },
+    {
+      "role": "assistant",
+      "content": "Hola Maria 👋, ¿tienes carnet de conducir / licencia de conducir? Es obligatorio."
+    },
+    {
+      "role": "user",
+      "content": "Yes I have license"
+    },
+    {
+      "role": "assistant",
+      "content": "Hi Maria 👋, which city or area are you located in?"
+    },
+    {
+      "role": "user",
+      "content": "Vivo en Guadalajara"
+    },
+    {
+      "role": "assistant",
+      "content": "Perfecto, Maria ✅ Entonces, Guadalajara y tienes licencia de conducir, ¿correcto?"
+    },
+    {
+      "role": "user",
+      "content": "Weekends"
+    },
+    {
+      "role": "assistant",
+      "content": "So, Maria — Guadalajara and weekends, correct? ✅"
+    },
+    {
+      "role": "user",
+      "content": "Flexible"
+    },
+    {
+      "role": "assistant",
+      "content": "¿Tienes experiencia previa repartiendo (años y plataformas como Glovo, Uber Eats, etc.)?"
+    },
+    {
+      "role": "user",
+      "content": "No experience"
+    },
+    {
+      "role": "assistant",
+      "content": "When could you start, Maria?"
+    },
+    {
+      "role": "user",
+      "content": "Puedo empezar el lunes"
+    },
+    {
+      "role": "assistant",
+      "content": "Perfecto, Maria — tengo todo salvo la fecha exacta de inicio. ¿Qué fecha exacta (día/mes/año) podrías empezar?"
+    }
+  ],
+  "extracted_fields": {
+    "city": "Guadalajara",
+    "full_name": "Maria",
+    "availability": "fines de semana",
+    "prior_experience": "sin experiencia",
+    "has_driver_license": true,
+    "preferred_schedule": "flexible"
+  },
+  "qualified": null,
+  "disqualification_reason": null,
+  "summary": null
+}
