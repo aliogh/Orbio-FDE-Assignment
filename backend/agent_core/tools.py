@@ -161,10 +161,10 @@ def _normalize_record_value(field_name: str, raw_value: str) -> Any | None:
     if field_name == "start_date":
         # Pydantic validator handles past-date rejection
         try:
-            ExtractedFields(start_date=v)
+            ef = ExtractedFields(start_date=v)
         except ValidationError:
             return None
-        return v  # ISO date string
+        return ef.start_date.isoformat()  # canonical ISO 8601, e.g. "2026-06-01"
     if field_name == "prior_experience":
         # Free-form for the JSON column; no normalization
         return v
@@ -204,6 +204,8 @@ def handle_flag_invalid(ctx: ToolContext, raw_args: dict[str, Any]) -> dict[str,
 
 def handle_disqualify(ctx: ToolContext, raw_args: dict[str, Any]) -> dict[str, Any]:
     args = DisqualifyArgs.model_validate(raw_args)
+    ctx.current_extracted["_disqualified"] = True
+    ctx.current_extracted["_disqualification_reason"] = args.reason
     persistence.update_conversation(
         conversation_id=ctx.conversation_id,
         patch={
@@ -218,9 +220,11 @@ def handle_complete_screening(
     ctx: ToolContext, raw_args: dict[str, Any]
 ) -> dict[str, Any]:
     args = CompleteScreeningArgs.model_validate(raw_args)
-    # Qualified iff no disqualify was called (we infer from current_extracted state).
-    # The runner must have set qualified=False already if disqualify fired.
-    qualified_flag = ctx.current_extracted.get("has_driver_license") is not False
+    if ctx.current_extracted.get("_disqualified"):
+        qualified_flag = False
+    else:
+        # Use `is True` so a missing license defaults to NOT qualified
+        qualified_flag = ctx.current_extracted.get("has_driver_license") is True
     persistence.update_conversation(
         conversation_id=ctx.conversation_id,
         patch={

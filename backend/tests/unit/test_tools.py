@@ -121,3 +121,27 @@ class TestCompleteScreening:
         assert patch["status"] == "completed"
         assert patch["summary"] == "Looks good"
         assert patch.get("ended_at") is not None
+
+    def test_disqualify_then_complete_preserves_qualified_false(
+        self, ctx: ToolContext, fake_persistence: MagicMock
+    ) -> None:
+        # Simulate: agent calls disqualify, then complete_screening
+        handle_disqualify(
+            ctx, {"reason": "no_license", "detail": "no license"}
+        )
+        result = handle_complete_screening(ctx, {"summary": "Disqualified."})
+        assert result == {"ok": True}
+        # The LAST update_conversation call (from complete_screening) should
+        # still have qualified=False, not True
+        last_patch = fake_persistence.update_conversation.call_args.kwargs["patch"]
+        assert last_patch["qualified"] is False
+        assert last_patch["status"] == "completed"
+
+    def test_complete_with_missing_license_marks_unqualified(
+        self, ctx: ToolContext, fake_persistence: MagicMock
+    ) -> None:
+        # has_driver_license never recorded — should default to qualified=False
+        result = handle_complete_screening(ctx, {"summary": "Incomplete."})
+        assert result == {"ok": True}
+        patch = fake_persistence.update_conversation.call_args.kwargs["patch"]
+        assert patch["qualified"] is False
