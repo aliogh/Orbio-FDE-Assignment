@@ -23,7 +23,7 @@
     },
     {
       "role": "assistant",
-      "content": "Diana, ¿tienes carnet de conducir/licencia de conducir?"
+      "content": "Entonces, Diana, ¿tienes carnet de conducir / licencia de conducir? Es obligatorio."
     },
     {
       "role": "user",
@@ -31,7 +31,7 @@
     },
     {
       "role": "assistant",
-      "content": "Perfecto, Diana. ¿En qué ciudad o zona vives?"
+      "content": "¿En qué ciudad o zona vives, Diana?"
     },
     {
       "role": "user",
@@ -39,7 +39,7 @@
     },
     {
       "role": "assistant",
-      "content": "Entonces, Sevilla, ¿correcto, Diana? ✅"
+      "content": "Entonces, Diana, Sevilla, ¿correcto? ✅"
     },
     {
       "role": "user",
@@ -47,7 +47,7 @@
     },
     {
       "role": "assistant",
-      "content": "¿Qué horario prefieres: mañana, tarde, noche o flexible, Diana?"
+      "content": "Entonces, Sevilla, fines de semana, ¿correcto? ✅"
     },
     {
       "role": "user",
@@ -55,7 +55,7 @@
     },
     {
       "role": "assistant",
-      "content": "¿Tienes experiencia previa como repartidora (años y plataformas, por ejemplo Glovo, Uber Eats)?"
+      "content": "Perfecto, Diana. ¿Tienes experiencia previa como repartidora y en qué plataformas (Glovo, Uber Eats, etc.)?"
     },
     {
       "role": "user",
@@ -63,7 +63,7 @@
     },
     {
       "role": "assistant",
-      "content": "Perfecto, Diana. ¿Cuándo podrías empezar?"
+      "content": "¿Cuándo podrías empezar, Diana?"
     },
     {
       "role": "user",
@@ -71,18 +71,19 @@
     },
     {
       "role": "assistant",
-      "content": "Diana, la fecha de inicio no fue aceptada: debe ser hoy o posterior. ¿Puedes confirmarla otra vez (por ejemplo 01/07/2026)?"
+      "content": "Perfecto, Diana. ✅ Resumen: vives en Sevilla, tienes carnet, disponibilidad fines de semana por las mañanas, 1 año en Glovo y puedes empezar el 1 de julio de 2026.  \nGracias — te contactaremos con los siguientes pasos."
     }
   ],
   "extracted_fields": {
     "city": "Sevilla",
     "full_name": "Diana",
-    "availability": "Fines de semana",
-    "prior_experience": "1 año, Glovo",
+    "start_date": "2026-07-01",
+    "availability": "fines de semana",
+    "prior_experience": "1 año en Glovo",
     "has_driver_license": true,
-    "preferred_schedule": "Mañanas"
+    "preferred_schedule": "mañanas"
   },
-  "qualified": null,
+  "qualified": true,
   "disqualification_reason": null,
-  "summary": null
+  "summary": "Diana, Sevilla, con carnet de conducir. Disponibilidad: fines de semana, mañanas. Experiencia: 1 año en Glovo. Disponibilidad para empezar el 1 de julio de 2026."
 }

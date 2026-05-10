@@ -120,6 +120,18 @@ class TestRecordField:
         patch = fake_persistence.update_conversation.call_args.kwargs["patch"]
         assert patch["extracted_fields"]["start_date"] == "2026-06-01"
 
+    def test_start_date_english_ordinal(
+        self, ctx: ToolContext, fake_persistence: MagicMock
+    ) -> None:
+        # "June 1st 2026" — ordinal suffix must be stripped before dateutil
+        result = handle_record_field(
+            ctx,
+            {"field": "start_date", "value": "June 1st 2026", "confidence": 0.95},
+        )
+        assert result["ok"] is True
+        patch = fake_persistence.update_conversation.call_args.kwargs["patch"]
+        assert patch["extracted_fields"]["start_date"] == "2026-06-01"
+
 
 class TestFlagInvalid:
     def test_returns_ok(self, ctx: ToolContext) -> None:

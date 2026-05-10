@@ -18,6 +18,7 @@ they prefer reconciliation over realtime.
 
 ```json
 {
+  "schema_version": "1.0",
   "event": "candidate.qualified",
   "fired_at": "2026-05-10T15:32:00Z",
   "screening_id": "uuid",

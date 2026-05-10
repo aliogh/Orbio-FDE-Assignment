@@ -7,7 +7,7 @@
     },
     {
       "role": "assistant",
-      "content": "Encantada, Ana 👋 ¿tienes carnet de conducir / licencia de conducir? (sí/no)"
+      "content": "Hola Ana 👋 ¿Tienes carnet de conducir / licencia de conducir?"
     },
     {
       "role": "user",
@@ -15,7 +15,7 @@
     },
     {
       "role": "assistant",
-      "content": "Perfecto, Ana ✅ ¿En qué ciudad o zona estás?"
+      "content": "Perfecto, Ana. ¿En qué ciudad o zona vives?"
     },
     {
       "role": "user",
@@ -23,7 +23,7 @@
     },
     {
       "role": "assistant",
-      "content": "Genial, Ana ✅ ¿Disponibilidad: jornada completa, parcial o solo fines de semana?"
+      "content": "Entonces, Ana, Madrid, ¿correcto? ✅"
     },
     {
       "role": "user",
@@ -31,7 +31,7 @@
     },
     {
       "role": "assistant",
-      "content": "Perfecto, Ana ✅ ¿Horario preferido: mañana, tarde, noche o flexible?"
+      "content": "Ana, ¿qué horario prefieres: mañana, tarde, noche o flexible?"
     },
     {
       "role": "user",
@@ -39,7 +39,7 @@
     },
     {
       "role": "assistant",
-      "content": "Perfecto, Ana ✅ ¿Tienes experiencia previa como repartidora? Si es así, indica años y plataformas (Glovo, Uber Eats, etc.), o escribe \"no\" si no."
+      "content": "Perfecto, Ana. ¿Tienes experiencia previa repartiendo (años y plataformas como Glovo, Uber Eats, etc.)?"
     },
     {
       "role": "user",
@@ -47,7 +47,7 @@
     },
     {
       "role": "assistant",
-      "content": "Perfecto, Ana ✅ ¿Cuándo podrías empezar? (fecha aproximada está bien)"
+      "content": "Perfecto, Ana. ¿Cuándo podrías empezar?"
     },
     {
       "role": "user",
@@ -55,18 +55,19 @@
     },
     {
       "role": "assistant",
-      "content": "Gracias, Ana. Sobre la fecha de inicio, el sistema pide hoy o una fecha futura cercana; ¿puedes confirmar una fecha de inicio que sea hoy o posterior?"
+      "content": "Gracias, Ana ✅ Resumen: carnet de conducir, Madrid; tiempo completo mañanas; 2 años en Glovo; disponible desde 1 de junio de 2026. \nTe contactaremos con los siguientes pasos."
     }
   ],
   "extracted_fields": {
     "city": "Madrid",
     "full_name": "Ana Pérez",
-    "availability": "tiempo completo",
+    "start_date": "2026-06-01",
+    "availability": "Tiempo completo",
     "prior_experience": "2 años en Glovo",
     "has_driver_license": true,
-    "preferred_schedule": "mañanas"
+    "preferred_schedule": "Mañanas"
   },
-  "qualified": null,
+  "qualified": true,
   "disqualification_reason": null,
-  "summary": null
+  "summary": "Ana Pérez, carnet de conducir, vive en Madrid. Disponibilidad tiempo completo, mañanas; 2 años en Glovo; puede empezar el 1 de junio de 2026."
 }

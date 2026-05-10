@@ -194,15 +194,17 @@ def _normalize_record_value(field_name: str, raw_value: str) -> Any | None:
                 ]
 
             _ISO_RE = _re.compile(r"^\d{4}-\d{2}-\d{2}$")
-            if _ISO_RE.match(v):
+            # Strip English ordinal suffixes ("June 1st" → "June 1") so dateutil can parse them
+            v_clean = _re.sub(r"(\d+)(st|nd|rd|th)\b", r"\1", v, flags=_re.IGNORECASE)
+            if _ISO_RE.match(v_clean):
                 # Pure ISO 8601 — parse without dayfirst to avoid day/month swap
-                parsed = _parse_date(v).date()
+                parsed = _parse_date(v_clean).date()
+            elif _re.search(r"\b(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)\b", v_clean, flags=_re.IGNORECASE):
+                # Spanish month name present — use Spanish parser
+                parsed = _parse_date(v_clean, parserinfo=_SpanishParserInfo(dayfirst=True), fuzzy=True).date()
             else:
-                # Natural language: try Spanish locale first, then default locale
-                try:
-                    parsed = _parse_date(v, parserinfo=_SpanishParserInfo(dayfirst=True), fuzzy=True).date()
-                except (ValueError, TypeError, OverflowError):
-                    parsed = _parse_date(v, dayfirst=True, fuzzy=True).date()
+                # English / numeric — default parser, dayfirst still on for "1/6/2026" → June 1
+                parsed = _parse_date(v_clean, dayfirst=True, fuzzy=True).date()
         except (ValueError, TypeError, OverflowError):
             return None
         if parsed < _date.today():

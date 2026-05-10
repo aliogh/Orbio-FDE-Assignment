@@ -79,6 +79,21 @@ to recruiters via a dashboard. Multilingual ES/EN with code-switching support.
    (cd frontend && pnpm install)
    ```
 
+### Deploying (one-time GCP setup)
+
+The `deploy-backend.yml` workflow uses keyless auth — no service-account JSON key in the repo. Setup:
+
+1. Enable Cloud Run, Artifact Registry, and Secret Manager on your GCP project.
+2. Create an Artifact Registry Docker repository named `orbio` in your chosen region.
+3. Create a Secret Manager secret for each: `openai-api-key`, `supabase-url`, `supabase-service-role-key`.
+4. Create a deployer service account with roles: `roles/run.admin`, `roles/iam.serviceAccountUser`, `roles/artifactregistry.writer`, `roles/secretmanager.secretAccessor`.
+5. Configure GitHub OIDC → Workload Identity Federation per the [`google-github-actions/auth` setup guide](https://github.com/google-github-actions/auth#setting-up-workload-identity-federation).
+6. Add five GitHub repo secrets: `GCP_PROJECT`, `GCP_REGION`, `GCP_WIF_PROVIDER`, `GCP_DEPLOYER_SA`, `ALLOWED_ORIGINS`.
+
+After that, every push to `main` that touches `backend/` deploys automatically.
+
+For Vercel: import the repo in the Vercel dashboard, set the root directory to `frontend/`, and add the env vars from `frontend/.env.example`.
+
 ### Running locally
 
 ```bash

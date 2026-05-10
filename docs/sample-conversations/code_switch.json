@@ -7,7 +7,7 @@
     },
     {
       "role": "assistant",
-      "content": "Hola Maria 👋, ¿tienes carnet de conducir / licencia de conducir? Es obligatorio."
+      "content": "Hola Maria 👋, ¿tienes carnet de conducir / licencia de conducir?"
     },
     {
       "role": "user",
@@ -15,7 +15,7 @@
     },
     {
       "role": "assistant",
-      "content": "Hi Maria 👋, which city or area are you located in?"
+      "content": "Great, Maria ✅. Which city or zone are you based in?"
     },
     {
       "role": "user",
@@ -23,7 +23,7 @@
     },
     {
       "role": "assistant",
-      "content": "Perfecto, Maria ✅ Entonces, Guadalajara y tienes licencia de conducir, ¿correcto?"
+      "content": "Entonces, Guadalajara y tienes carnet de conducir, ¿correcto? ✅"
     },
     {
       "role": "user",
@@ -31,7 +31,7 @@
     },
     {
       "role": "assistant",
-      "content": "So, Maria — Guadalajara and weekends, correct? ✅"
+      "content": "Perfecto, Maria. ¿Prefieres mañana, tarde, noche o eres flexible?"
     },
     {
       "role": "user",
@@ -39,7 +39,7 @@
     },
     {
       "role": "assistant",
-      "content": "¿Tienes experiencia previa repartiendo (años y plataformas como Glovo, Uber Eats, etc.)?"
+      "content": "So, Guadalajara, weekends, flexible, correct? ✅"
     },
     {
       "role": "user",
@@ -47,7 +47,7 @@
     },
     {
       "role": "assistant",
-      "content": "When could you start, Maria?"
+      "content": "Maria, when can you start? (approximate date is fine)"
     },
     {
       "role": "user",
@@ -55,7 +55,7 @@
     },
     {
       "role": "assistant",
-      "content": "Perfecto, Maria — tengo todo salvo la fecha exacta de inicio. ¿Qué fecha exacta (día/mes/año) podrías empezar?"
+      "content": "Vale, Maria — ¿a partir de qué fecha exacta puedes empezar? ¿Te refieres a este lunes o al próximo? Por favor indica la fecha (ej. 12/05)."
     }
   ],
   "extracted_fields": {

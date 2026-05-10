@@ -7,7 +7,7 @@
     },
     {
       "role": "assistant",
-      "content": "¡Hola! 👋 ¿Cómo te llamas?"
+      "content": "¡Hola 👋! ¿Cómo te llamas?"
     },
     {
       "role": "user",
@@ -15,7 +15,7 @@
     },
     {
       "role": "assistant",
-      "content": "Carlos, ¿tienes carnet de conducir / licencia de conducir?"
+      "content": "Carlos, ¿tienes carnet de conducir/licencia de conducir? Es obligatorio para el puesto."
     },
     {
       "role": "user",
@@ -23,7 +23,7 @@
     },
     {
       "role": "assistant",
-      "content": "Carlos, ¿en qué ciudad o zona vives?"
+      "content": "Perfecto, Carlos. ¿En qué ciudad o zona vives? (Ej.: Madrid centro, Monterrey, CDMX)"
     },
     {
       "role": "user",
@@ -31,7 +31,7 @@
     },
     {
       "role": "assistant",
-      "content": "Entonces, Madrid, ¿fines de semana, correcto?"
+      "content": "Entonces, Madrid, ¿fines de semana o jornada completa? 👋✅"
     },
     {
       "role": "user",
@@ -39,7 +39,7 @@
     },
     {
       "role": "assistant",
-      "content": "No pasa nada, Carlos. ¿Buscas jornada completa, parcial o solo fines de semana?"
+      "content": "No pasa, Carlos. ¿Tienes disponibilidad de jornada completa, media jornada o solo fines de semana?"
     },
     {
       "role": "user",
@@ -47,7 +47,7 @@
     },
     {
       "role": "assistant",
-      "content": "¿Prefieres turno de mañana, tarde, noche o eres flexible?"
+      "content": "Perfecto. ¿Qué horario prefieres: mañana, tarde, noche o flexible?"
     },
     {
       "role": "user",
@@ -55,7 +55,7 @@
     },
     {
       "role": "assistant",
-      "content": "Perfecto, Carlos. ¿Tienes experiencia previa entregando pedidos (años y plataformas, por ejemplo Glovo, Uber Eats)?"
+      "content": "Perfecto, Carlos. ¿Tienes experiencia previa como repartidor o en plataformas (Glovo, Uber Eats, Rappi)? ¿Cuántos años?"
     },
     {
       "role": "user",
@@ -63,7 +63,7 @@
     },
     {
       "role": "assistant",
-      "content": "¿CUándo podrías empezar, Carlos?"
+      "content": "Carlos, ¿cuándo podrías empezar?"
     },
     {
       "role": "user",
@@ -71,16 +71,16 @@
     },
     {
       "role": "assistant",
-      "content": "Carlos, no se pudo registrar \"mañana\". ¿Puedes indicar \"hoy\", \"mañana\" o una fecha concreta (p. ej. [redacted])?"
+      "content": "Carlos, ¿puedes confirmar la fecha de inicio exacta: ¿te refieres a mañana o prefieres dar una fecha concreta?"
     }
   ],
   "extracted_fields": {
     "city": "Madrid",
     "full_name": "Carlos",
-    "availability": "tiempo completo",
-    "prior_experience": "0 años, sin experiencia",
+    "availability": "Tiempo completo",
+    "prior_experience": "Cero experiencia (0 años)",
     "has_driver_license": true,
-    "preferred_schedule": "tardes"
+    "preferred_schedule": "Tardes"
   },
   "qualified": null,
   "disqualification_reason": null,
