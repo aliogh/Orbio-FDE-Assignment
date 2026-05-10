@@ -1,0 +1,57 @@
+name: Deploy backend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy-backend.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Auth to GCP via Workload Identity
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_DEPLOYER_SA }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev
+
+      - name: Build & push image
+        run: |
+          IMAGE=${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/orbio/screening-backend:${{ github.sha }}
+          docker build -t $IMAGE backend
+          docker push $IMAGE
+          echo "IMAGE=$IMAGE" >> $GITHUB_ENV
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy screening-backend \
+            --image=$IMAGE \
+            --region=${{ secrets.GCP_REGION }} \
+            --platform=managed \
+            --allow-unauthenticated \
+            --set-env-vars="ALLOWED_ORIGINS=${{ secrets.ALLOWED_ORIGINS }},OPENAI_CHAT_MODEL=gpt-5-mini,OPENAI_REALTIME_MODEL=gpt-realtime-mini,ENV=production" \
+            --set-secrets="OPENAI_API_KEY=openai-api-key:latest,SUPABASE_URL=supabase-url:latest,SUPABASE_SERVICE_ROLE_KEY=supabase-service-role-key:latest" \
+            --min-instances=0 \
+            --max-instances=2 \
+            --cpu=1 --memory=512Mi
+
+      - name: Smoke test
+        run: |
+          URL=$(gcloud run services describe screening-backend \
+            --region=${{ secrets.GCP_REGION }} --format='value(status.url)')
+          curl -fsS "$URL/health"
