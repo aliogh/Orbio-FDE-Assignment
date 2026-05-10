@@ -58,6 +58,21 @@ class TestCompleteScreeningArgs:
             CompleteScreeningArgs()
 
 
+class TestPriorExperience:
+    def test_construction_round_trip(self) -> None:
+        pe = PriorExperience(years=2.5, platforms=["Glovo", "Uber Eats"])
+        assert pe.years == 2.5
+        assert pe.platforms == ["Glovo", "Uber Eats"]
+
+    def test_negative_years_rejected(self) -> None:
+        with pytest.raises(ValidationError):
+            PriorExperience(years=-0.5)
+
+    def test_platforms_default_empty(self) -> None:
+        pe = PriorExperience(years=0)
+        assert pe.platforms == []
+
+
 class TestExtractedFields:
     def test_partial_is_valid(self) -> None:
         ef = ExtractedFields(full_name="Ana", has_driver_license=True)

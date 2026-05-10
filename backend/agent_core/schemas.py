@@ -40,7 +40,7 @@ class RecordFieldArgs(BaseModel):
 class FlagInvalidArgs(BaseModel):
     model_config = ConfigDict(extra="forbid")
     field: str = Field(..., min_length=1)
-    user_value: str
+    user_value: str = Field(..., min_length=1)
     reason: str = Field(..., min_length=1)
 
 
