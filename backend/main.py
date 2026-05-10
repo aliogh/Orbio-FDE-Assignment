@@ -27,6 +27,9 @@ def create_app() -> FastAPI:
     def health() -> dict[str, str]:
         return {"status": "ok"}
 
+    from transports.chat_api import router as chat_router
+    app.include_router(chat_router)
+
     return app
 
 
