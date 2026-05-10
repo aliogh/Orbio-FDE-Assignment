@@ -40,27 +40,34 @@ class MatchResult:
 
 
 @lru_cache(maxsize=1)
-def load_service_areas() -> tuple[str, ...]:
-    """Flat list of all canonical city names across all countries."""
+def _load_city_pairs() -> tuple[tuple[str, ...], tuple[str, ...]]:
+    """Load canonical and normalised city tuples atomically. Cached for life
+    of process — lists are paired by index so they cannot drift."""
     with DATA_PATH.open(encoding="utf-8") as f:
         data: dict[str, list[str]] = json.load(f)
-    return tuple(name for cities in data.values() for name in cities)
+    canonical = tuple(name for cities in data.values() for name in cities)
+    normed = tuple(_normalize(c) for c in canonical)
+    return canonical, normed
+
+
+def load_service_areas() -> tuple[str, ...]:
+    """Flat tuple of canonical city names across all countries."""
+    canonical, _ = _load_city_pairs()
+    return canonical
 
 
 def match_city(user_value: str) -> MatchResult:
     if not user_value or not user_value.strip():
         return MatchResult(matched=False, canonical=None, score=0.0)
 
-    cities = load_service_areas()
-    # Build normalised versions for scoring; keep originals for canonical output
-    normed_cities = [_normalize(c) for c in cities]
+    cities, normed_cities = _load_city_pairs()
     normed_query = _normalize(user_value)
 
     best = process.extractOne(normed_query, normed_cities, scorer=fuzz.WRatio)
     if best is None:
         return MatchResult(matched=False, canonical=None, score=0.0)
 
-    _normed_canonical, score, idx = best
+    _, score, idx = best
     canonical = cities[idx]  # return the original accented form
     if score >= MATCH_THRESHOLD:
         return MatchResult(matched=True, canonical=canonical, score=score)
