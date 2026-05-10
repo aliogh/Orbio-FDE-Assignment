@@ -116,7 +116,7 @@ class CompleteScreeningArgs(BaseModel):
 
 **Server-side validation rules (run inside each tool handler):**
 - `record_field("has_driver_license", value)` → normalize to bool; if false, also call `disqualify("no_license")` defensively
-- `record_field("city", value)` → fuzzy-match against `service_areas.json`; if no match within threshold (RapidFuzz score ≥ 85), return `{ok: false, validation_error: "..."}` so the agent re-asks
+- `record_field("city", value)` → fuzzy-match against `service_areas.json`; if no match within threshold (RapidFuzz WRatio ≥ 80, applied after Unicode NFKD accent-stripping), return `{ok: false, validation_error: "..."}` so the agent re-asks. (80 chosen empirically: a single-character transposition on a 6-char word like "Madird" → "Madrid" scores 83.3, while clear non-matches like "Atlantis" cap around 62.5, leaving a comfortable rejection margin.)
 - `record_field("start_date", value)` → parse to ISO date; reject dates in the past
 - All other fields → store as-is, agent handles re-asking on its own
 

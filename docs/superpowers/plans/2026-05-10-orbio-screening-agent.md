@@ -3967,7 +3967,7 @@ themselves with city + name in one breath).
 |---|---|---|
 | `full_name` | Yes | Non-empty string |
 | `has_driver_license` | Yes — disqualifier | Boolean (yes/no/sí/no normalization). False → `disqualify("no_license")` |
-| `city` | Yes — disqualifier | Fuzzy-matched (RapidFuzz, threshold 85) against `service_areas.json`. No match after one retry → `disqualify("out_of_service_area")` |
+| `city` | Yes — disqualifier | Fuzzy-matched (RapidFuzz WRatio ≥ 80, with NFKD accent-stripping) against `service_areas.json`. No match after one retry → `disqualify("out_of_service_area")` |
 | `availability` | Yes | One of: `full_time`, `part_time`, `weekends` |
 | `preferred_schedule` | Yes | One of: `morning`, `afternoon`, `evening`, `flexible` |
 | `prior_experience` | Yes (incl. "none") | Years + platforms (free-form, stored as JSON sub-object) |
