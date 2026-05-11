@@ -51,12 +51,14 @@ def voice_session() -> VoiceSessionResponse:
         "tools": realtime_tools,
         "tool_choice": "auto",
         # Server VAD lets OpenAI detect end-of-utterance instead of waiting
-        # for an explicit signal — cuts ~500–1000ms off perceived latency.
+        # for an explicit signal. Threshold 0.4 catches softer speech onset;
+        # silence 800ms tolerates natural mid-sentence pauses without cutting
+        # the candidate off. Prefix padding keeps the first ~300ms of speech.
         "turn_detection": {
             "type": "server_vad",
-            "threshold": 0.5,
+            "threshold": 0.4,
             "prefix_padding_ms": 300,
-            "silence_duration_ms": 500,
+            "silence_duration_ms": 800,
         },
         "input_audio_transcription": {"model": "whisper-1"},
     }

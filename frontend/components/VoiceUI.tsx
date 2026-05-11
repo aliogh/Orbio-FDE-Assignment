@@ -30,8 +30,15 @@ export default function VoiceUI() {
         }
       };
 
-      // Local mic
-      const mic = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Local mic — enable browser DSP so the agent's playback doesn't echo back
+      // into the mic (the #1 cause of VAD confusion when using laptop speakers).
+      const mic = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+      });
       mic.getTracks().forEach((t) => pc.addTrack(t, mic));
 
       // Data channel for control events (response.create etc.)
