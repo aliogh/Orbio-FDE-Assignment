@@ -10,6 +10,7 @@ export default function VoiceUI() {
   const [errMsg, setErrMsg] = useState<string | null>(null);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
+  const dcRef = useRef<RTCDataChannel | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   async function start() {
@@ -33,8 +34,37 @@ export default function VoiceUI() {
       const mic = await navigator.mediaDevices.getUserMedia({ audio: true });
       mic.getTracks().forEach((t) => pc.addTrack(t, mic));
 
-      // Data channel for events (we don't send anything custom in this take-home)
-      pc.createDataChannel("oai-events");
+      // Data channel for control events (response.create etc.)
+      const dc = pc.createDataChannel("oai-events");
+      dcRef.current = dc;
+      dc.onopen = () => {
+        // Proactive first turn — tell the model to greet the candidate.
+        // Without this, the model waits silently for user audio.
+        dc.send(
+          JSON.stringify({
+            type: "response.create",
+            response: {
+              modalities: ["audio", "text"],
+              instructions:
+                "Saluda brevemente al candidato en español, preséntate como el asistente de selección de Grupo Sazón y pregúntale cómo se llama. Muy corto, una frase amable.",
+            },
+          }),
+        );
+      };
+      dc.onmessage = (ev) => {
+        // Lightweight diagnostics — drop events to the console so we can debug
+        // realtime behaviour from the browser devtools without extra UI.
+        try {
+          const evt = JSON.parse(ev.data);
+          if (evt.type && !evt.type.includes("delta")) {
+            // Skip the very chatty per-token delta events
+            // eslint-disable-next-line no-console
+            console.log("[realtime]", evt.type, evt);
+          }
+        } catch {
+          /* non-JSON frames — ignore */
+        }
+      };
 
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
@@ -67,6 +97,8 @@ export default function VoiceUI() {
   }
 
   function stop() {
+    dcRef.current?.close();
+    dcRef.current = null;
     pcRef.current?.getSenders().forEach((s) => s.track?.stop());
     pcRef.current?.close();
     pcRef.current = null;

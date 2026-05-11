@@ -50,6 +50,15 @@ def voice_session() -> VoiceSessionResponse:
         "voice": "alloy",
         "tools": realtime_tools,
         "tool_choice": "auto",
+        # Server VAD lets OpenAI detect end-of-utterance instead of waiting
+        # for an explicit signal — cuts ~500–1000ms off perceived latency.
+        "turn_detection": {
+            "type": "server_vad",
+            "threshold": 0.5,
+            "prefix_padding_ms": 300,
+            "silence_duration_ms": 500,
+        },
+        "input_audio_transcription": {"model": "whisper-1"},
     }
 
     response = httpx.post(
