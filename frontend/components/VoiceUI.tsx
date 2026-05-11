@@ -70,7 +70,6 @@ export default function VoiceUI() {
           if (!evt.type) return;
           if (evt.type.endsWith(".delta")) return; // skip chatty per-token deltas
           const t = ((performance.now() - sessionT0) / 1000).toFixed(2);
-          // Include the most useful field per event type for terse logs
           const summary: Record<string, unknown> = { type: evt.type, t };
           if (evt.transcript) summary.transcript = evt.transcript;
           if (evt.item?.role) summary.role = evt.item.role;
@@ -78,6 +77,30 @@ export default function VoiceUI() {
           if (evt.error) summary.error = evt.error;
           // eslint-disable-next-line no-console
           console.log("[realtime]", JSON.stringify(summary));
+
+          // CRITICAL: when the model fires a function call, we must reply with
+          // a `function_call_output` and then `response.create` — otherwise the
+          // model goes silent after the tool fires and the user has no idea
+          // their input was processed. We acknowledge with {ok: true} (voice
+          // tool persistence is intentionally best-effort for the take-home;
+          // chat is the canonical persistence path).
+          if (evt.type === "response.function_call_arguments.done") {
+            const call_id = evt.call_id;
+            const name = evt.name;
+            // eslint-disable-next-line no-console
+            console.log("[realtime] tool.call", { name, call_id });
+            dc.send(
+              JSON.stringify({
+                type: "conversation.item.create",
+                item: {
+                  type: "function_call_output",
+                  call_id,
+                  output: JSON.stringify({ ok: true, validation_error: null }),
+                },
+              }),
+            );
+            dc.send(JSON.stringify({ type: "response.create" }));
+          }
         } catch {
           /* non-JSON frames — ignore */
         }

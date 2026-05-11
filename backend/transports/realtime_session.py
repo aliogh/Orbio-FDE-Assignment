@@ -65,7 +65,7 @@ def voice_session() -> VoiceSessionResponse:
             "create_response": True,
             "interrupt_response": True,
         },
-        "input_audio_transcription": {"model": "whisper-1"},
+        "input_audio_transcription": {"model": "whisper-1", "language": "es"},
     }
 
     response = httpx.post(
