@@ -51,14 +51,19 @@ def voice_session() -> VoiceSessionResponse:
         "tools": realtime_tools,
         "tool_choice": "auto",
         # Server VAD lets OpenAI detect end-of-utterance instead of waiting
-        # for an explicit signal. Threshold 0.4 catches softer speech onset;
-        # silence 800ms tolerates natural mid-sentence pauses without cutting
-        # the candidate off. Prefix padding keeps the first ~300ms of speech.
+        # for an explicit signal. `create_response: true` is REQUIRED for the
+        # model to auto-reply after the user stops speaking (default was true
+        # in older API versions, false in newer; setting explicitly is safer).
+        # `interrupt_response: true` lets the candidate speak over the agent
+        # to interrupt its current reply. Threshold 0.4 catches softer speech
+        # onset; silence 800ms tolerates natural mid-sentence pauses.
         "turn_detection": {
             "type": "server_vad",
             "threshold": 0.4,
             "prefix_padding_ms": 300,
             "silence_duration_ms": 800,
+            "create_response": True,
+            "interrupt_response": True,
         },
         "input_audio_transcription": {"model": "whisper-1"},
     }

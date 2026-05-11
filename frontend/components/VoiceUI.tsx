@@ -16,9 +16,12 @@ export default function VoiceUI() {
   async function start() {
     setPhase("connecting");
     setErrMsg(null);
+    const sessionT0 = performance.now();
     try {
       const session = await createVoiceSession();
       setConversationId(session.conversation_id);
+      // eslint-disable-next-line no-console
+      console.log("[realtime] session minted", { model: session.model, cid: session.conversation_id });
 
       const pc = new RTCPeerConnection();
       pcRef.current = pc;
@@ -59,15 +62,22 @@ export default function VoiceUI() {
         );
       };
       dc.onmessage = (ev) => {
-        // Lightweight diagnostics — drop events to the console so we can debug
-        // realtime behaviour from the browser devtools without extra UI.
+        // Diagnostics — log every realtime event with a relative timestamp so
+        // we can spot dead air, missed VAD triggers, or duplicate responses
+        // from the browser console (Cmd-Opt-J on Chrome).
         try {
           const evt = JSON.parse(ev.data);
-          if (evt.type && !evt.type.includes("delta")) {
-            // Skip the very chatty per-token delta events
-            // eslint-disable-next-line no-console
-            console.log("[realtime]", evt.type, evt);
-          }
+          if (!evt.type) return;
+          if (evt.type.endsWith(".delta")) return; // skip chatty per-token deltas
+          const t = ((performance.now() - sessionT0) / 1000).toFixed(2);
+          // Include the most useful field per event type for terse logs
+          const summary: Record<string, unknown> = { type: evt.type, t };
+          if (evt.transcript) summary.transcript = evt.transcript;
+          if (evt.item?.role) summary.role = evt.item.role;
+          if (evt.response?.status) summary.status = evt.response.status;
+          if (evt.error) summary.error = evt.error;
+          // eslint-disable-next-line no-console
+          console.log("[realtime]", JSON.stringify(summary));
         } catch {
           /* non-JSON frames — ignore */
         }
