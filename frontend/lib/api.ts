@@ -29,3 +29,31 @@ export async function createVoiceSession(): Promise<VoiceSessionResponse> {
   if (!res.ok) throw new Error(`voice session failed: ${res.status}`);
   return res.json();
 }
+
+export async function dispatchVoiceTool(args: {
+  conversationId: string;
+  name: string;
+  args: Record<string, unknown>;
+}): Promise<Record<string, unknown>> {
+  const res = await fetch(`${BACKEND}/api/voice/tool`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      conversation_id: args.conversationId,
+      name: args.name,
+      args: args.args,
+    }),
+  });
+  if (!res.ok) return { ok: false, error: `tool dispatch failed: ${res.status}` };
+  return res.json();
+}
+
+export async function endVoiceSession(conversationId: string): Promise<void> {
+  await fetch(`${BACKEND}/api/voice/end`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ conversation_id: conversationId }),
+  }).catch(() => {
+    /* best-effort */
+  });
+}

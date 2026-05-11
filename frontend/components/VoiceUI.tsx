@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { createVoiceSession } from "@/lib/api";
+import { createVoiceSession, dispatchVoiceTool, endVoiceSession } from "@/lib/api";
 
 type Phase = "idle" | "connecting" | "live" | "ended" | "error";
 
@@ -9,6 +9,7 @@ export default function VoiceUI() {
   const [phase, setPhase] = useState<Phase>("idle");
   const [errMsg, setErrMsg] = useState<string | null>(null);
   const [conversationId, setConversationId] = useState<string | null>(null);
+  const conversationIdRef = useRef<string | null>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const dcRef = useRef<RTCDataChannel | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -20,6 +21,7 @@ export default function VoiceUI() {
     try {
       const session = await createVoiceSession();
       setConversationId(session.conversation_id);
+      conversationIdRef.current = session.conversation_id;
       // eslint-disable-next-line no-console
       console.log("[realtime] session minted", { model: session.model, cid: session.conversation_id });
 
@@ -78,28 +80,41 @@ export default function VoiceUI() {
           // eslint-disable-next-line no-console
           console.log("[realtime]", JSON.stringify(summary));
 
-          // CRITICAL: when the model fires a function call, we must reply with
-          // a `function_call_output` and then `response.create` — otherwise the
-          // model goes silent after the tool fires and the user has no idea
-          // their input was processed. We acknowledge with {ok: true} (voice
-          // tool persistence is intentionally best-effort for the take-home;
-          // chat is the canonical persistence path).
+          // When the model fires a function call we (a) dispatch it through
+          // the backend so persistence/validation mirror the chat path, (b)
+          // send the real result back as a function_call_output, and (c)
+          // trigger response.create so the model continues speaking.
           if (evt.type === "response.function_call_arguments.done") {
             const call_id = evt.call_id;
             const name = evt.name;
             // eslint-disable-next-line no-console
             console.log("[realtime] tool.call", { name, call_id });
-            dc.send(
-              JSON.stringify({
-                type: "conversation.item.create",
-                item: {
-                  type: "function_call_output",
-                  call_id,
-                  output: JSON.stringify({ ok: true, validation_error: null }),
-                },
-              }),
-            );
-            dc.send(JSON.stringify({ type: "response.create" }));
+            const parsedArgs = (() => {
+              try {
+                return JSON.parse(evt.arguments ?? "{}");
+              } catch {
+                return {};
+              }
+            })();
+            (async () => {
+              const cid = conversationIdRef.current;
+              const result = cid
+                ? await dispatchVoiceTool({ conversationId: cid, name, args: parsedArgs })
+                : { ok: true, validation_error: null };
+              // eslint-disable-next-line no-console
+              console.log("[realtime] tool.result", { name, call_id, result });
+              dc.send(
+                JSON.stringify({
+                  type: "conversation.item.create",
+                  item: {
+                    type: "function_call_output",
+                    call_id,
+                    output: JSON.stringify(result),
+                  },
+                }),
+              );
+              dc.send(JSON.stringify({ type: "response.create" }));
+            })();
           }
         } catch {
           /* non-JSON frames — ignore */
@@ -137,12 +152,19 @@ export default function VoiceUI() {
   }
 
   function stop() {
+    const cid = conversationIdRef.current;
     dcRef.current?.close();
     dcRef.current = null;
     pcRef.current?.getSenders().forEach((s) => s.track?.stop());
     pcRef.current?.close();
     pcRef.current = null;
     setPhase("ended");
+    // Best-effort: tell the backend the call ended so the conversation row
+    // transitions out of `in_progress`. If complete_screening already fired
+    // the backend will leave the row as `completed`.
+    if (cid) {
+      void endVoiceSession(cid);
+    }
   }
 
   return (

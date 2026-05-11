@@ -1,22 +1,21 @@
-"""POST /api/voice/session — mints an ephemeral OpenAI Realtime client key
-for the browser to use over WebRTC. Audio never touches our backend.
-
-The browser reads the returned `client_secret`, opens a WebRTC peer connection
-to OpenAI's Realtime endpoint, and registers our 4 tools client-side using
-the same schemas. Tool calls fire HTTPS to our backend (separate route, future
-work) so persistence still flows through us — for the take-home, we keep the
-voice path self-contained and rely on a post-call persistence write to keep
-the demo simple. The chat surface remains the canonical persistence path."""
+"""Voice transport: mints an ephemeral OpenAI Realtime client key for the
+browser to use over WebRTC, plus bridges tool calls from the browser to the
+same handlers the chat path uses, so voice conversations persist identically
+to chat conversations."""
 from __future__ import annotations
 
 import os
+from datetime import UTC, datetime
+from typing import Any
 
 import httpx
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from agent_core.prompts import SYSTEM_PROMPT
-from agent_core.tools import OPENAI_TOOL_SCHEMAS
+from agent_core.tools import HANDLERS, OPENAI_TOOL_SCHEMAS, ToolContext
+from persistence import conversations as persistence
+from persistence.db import get_client
 from persistence.conversations import start_conversation
 
 router = APIRouter()
@@ -94,3 +93,92 @@ def voice_session() -> VoiceSessionResponse:
         client_secret=data["client_secret"]["value"],
         model=model,
     )
+
+
+# ── Voice tool bridge ─────────────────────────────────────────────────────────
+
+
+class VoiceToolRequest(BaseModel):
+    conversation_id: str
+    name: str = Field(..., min_length=1)
+    args: dict[str, Any] = Field(default_factory=dict)
+
+
+@router.post("/api/voice/tool")
+def voice_tool(req: VoiceToolRequest) -> dict[str, Any]:
+    """Dispatch a voice-side tool call through the same handlers chat uses.
+
+    The browser receives `response.function_call_arguments.done` events from
+    OpenAI Realtime, POSTs them here, and we return the result for the browser
+    to relay back to the model via `function_call_output`. This keeps voice and
+    chat conversations indistinguishable from the recruiter dashboard's POV."""
+    client = get_client()
+    rows = (
+        client.table("conversations").select("*").eq("id", req.conversation_id).execute().data
+    )
+    if not rows:
+        raise HTTPException(status_code=404, detail="conversation not found")
+    conv = rows[0]
+
+    extracted = dict(conv.get("extracted_fields") or {})
+    # If a prior disqualify already fired, inject the sentinel so
+    # complete_screening doesn't overwrite qualified=False (same protection
+    # the chat runner provides via in-memory ToolContext).
+    if conv.get("qualified") is False:
+        extracted["_disqualified"] = True
+
+    ctx = ToolContext(conversation_id=req.conversation_id, current_extracted=extracted)
+    handler = HANDLERS.get(req.name)
+    if handler is None:
+        return {"ok": False, "error": f"unknown tool {req.name}"}
+    try:
+        result = handler(ctx, req.args)
+    except Exception as exc:  # noqa: BLE001 — surface to model
+        return {"ok": False, "error": str(exc)}
+
+    # Mirror the voice tool call into the turns table for the recruiter
+    # transcript view. We log each tool as its own assistant-style entry.
+    try:
+        persistence.append_turn(
+            conversation_id=req.conversation_id,
+            role="tool",
+            content=None,
+            tool_calls=[{"name": req.name, "args": req.args, "result": result}],
+        )
+    except Exception:  # noqa: BLE001 — turn logging is best-effort
+        pass
+
+    return result
+
+
+# ── End-of-call endpoint ──────────────────────────────────────────────────────
+
+
+class VoiceEndRequest(BaseModel):
+    conversation_id: str
+
+
+@router.post("/api/voice/end")
+def voice_end(req: VoiceEndRequest) -> dict[str, Any]:
+    """Called by the browser when the user clicks 'Terminar'. Marks the
+    conversation as `abandoned` unless `complete_screening` already moved it
+    to `completed`."""
+    client = get_client()
+    rows = (
+        client.table("conversations")
+        .select("status")
+        .eq("id", req.conversation_id)
+        .execute()
+        .data
+    )
+    if not rows:
+        raise HTTPException(status_code=404, detail="conversation not found")
+    if rows[0]["status"] == "in_progress":
+        persistence.update_conversation(
+            conversation_id=req.conversation_id,
+            patch={
+                "status": "abandoned",
+                "ended_at": datetime.now(UTC).isoformat(),
+            },
+        )
+    return {"ok": True}
