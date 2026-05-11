@@ -10,7 +10,8 @@ from main import create_app
 
 
 @pytest.fixture
-def client(mocker) -> TestClient:
+def client(mocker, monkeypatch: pytest.MonkeyPatch) -> TestClient:
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
     fake_response = MagicMock()
     fake_response.json.return_value = {
         "client_secret": {"value": "ek_abc123", "expires_at": 1234567890},
