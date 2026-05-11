@@ -16,7 +16,7 @@ def compute_stats() -> dict[str, Any]:
     try:
         result = client.rpc("conversations_stats", {}).execute()
         row = (result.data or [{}])[0]
-    except Exception:  # noqa: BLE001 — RPC absent in some environments
+    except Exception:
         row = {"total": 0, "qualified": 0, "abandoned": 0, "avg_duration_seconds": 0}
 
     total = row.get("total") or 0

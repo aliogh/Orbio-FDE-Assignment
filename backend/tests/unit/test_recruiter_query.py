@@ -28,6 +28,7 @@ class TestStats:
 
 class TestList:
     def test_list_conversations_filters(self, fake_client: MagicMock) -> None:
-        fake_client.table.return_value.select.return_value.order.return_value.limit.return_value.execute.return_value.data = []
+        chain = fake_client.table.return_value.select.return_value.order.return_value
+        chain.limit.return_value.execute.return_value.data = []
         rq.list_conversations(limit=20)
         fake_client.table.assert_called_with("conversations")

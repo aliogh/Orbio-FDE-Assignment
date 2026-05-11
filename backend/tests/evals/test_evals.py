@@ -68,8 +68,10 @@ def test_scenario(scenario: Scenario, supabase) -> None:
 
     # Assertions
     if scenario.expected_qualified is not None:
-        assert conv["qualified"] == scenario.expected_qualified, \
-            f"{scenario.name}: expected qualified={scenario.expected_qualified}, got {conv['qualified']}"
+        assert conv["qualified"] == scenario.expected_qualified, (
+            f"{scenario.name}: expected qualified={scenario.expected_qualified}, "
+            f"got {conv['qualified']}"
+        )
     if scenario.expected_disqualification is not None:
         assert conv["disqualification_reason"] == scenario.expected_disqualification
 

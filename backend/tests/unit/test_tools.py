@@ -103,7 +103,11 @@ class TestRecordField:
     ) -> None:
         result = handle_record_field(
             ctx,
-            {"field": "has_driver_license", "value": "Sí, tengo carnet de conducir", "confidence": 0.95},
+            {
+                "field": "has_driver_license",
+                "value": "Sí, tengo carnet de conducir",
+                "confidence": 0.95,
+            },
         )
         assert result["ok"] is True
         patch = fake_persistence.update_conversation.call_args.kwargs["patch"]

@@ -7,15 +7,10 @@ import pytest
 from pydantic import ValidationError
 
 from agent_core.schemas import (
-    Availability,
     CompleteScreeningArgs,
-    DisqualificationReason,
     DisqualifyArgs,
     ExtractedFields,
-    FieldName,
     FlagInvalidArgs,
-    Language,
-    PreferredSchedule,
     PriorExperience,
     RecordFieldArgs,
 )

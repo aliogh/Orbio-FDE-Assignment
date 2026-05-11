@@ -10,21 +10,17 @@ its own (e.g. "is this city in service?") return {"ok": False,
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
-
-from pydantic import ValidationError
 
 from agent_core import service_areas
 from agent_core.schemas import (
     CompleteScreeningArgs,
     DisqualifyArgs,
-    ExtractedFields,
     FlagInvalidArgs,
     RecordFieldArgs,
 )
 from persistence import conversations as persistence
-
 
 # ── Tool execution context ─────────────────────────────────────────────────────
 
@@ -150,18 +146,11 @@ def _normalize_record_value(field_name: str, raw_value: str) -> Any | None:
         lower = v.strip().lower()
         # Negative tokens first (more specific in Spanish — must precede positive
         # check so "No tengo carnet" doesn't accidentally match "tengo" → True)
-        if any(tok in lower for tok in ["no ", "no,", "false", "0", "ningun", "no tengo"]) or lower in {
-            "no",
-            "false",
-            "0",
-        }:
+        neg_tokens = ["no ", "no,", "false", "0", "ningun", "no tengo"]
+        pos_tokens = ["sí", "si ", "si,", "yes", "true", "tengo", "claro", "por supuesto"]
+        if any(tok in lower for tok in neg_tokens) or lower in {"no", "false", "0"}:
             return False
-        if any(tok in lower for tok in ["sí", "si ", "si,", "yes", "true", "tengo", "claro", "por supuesto"]) or lower in {
-            "si",
-            "yes",
-            "true",
-            "1",
-        }:
+        if any(tok in lower for tok in pos_tokens) or lower in {"si", "yes", "true", "1"}:
             return True
         return None
     if field_name == "city":
@@ -174,11 +163,13 @@ def _normalize_record_value(field_name: str, raw_value: str) -> Any | None:
         from datetime import date as _date  # local import to avoid top-level pollution
 
         try:
+            from typing import ClassVar
+
             from dateutil.parser import parse as _parse_date  # type: ignore[import-untyped]
             from dateutil.parser import parserinfo as _parserinfo
 
             class _SpanishParserInfo(_parserinfo):
-                MONTHS = [
+                MONTHS: ClassVar = [
                     ("enero", "ene"),
                     ("febrero", "feb"),
                     ("marzo", "mar"),
@@ -194,14 +185,21 @@ def _normalize_record_value(field_name: str, raw_value: str) -> Any | None:
                 ]
 
             _ISO_RE = _re.compile(r"^\d{4}-\d{2}-\d{2}$")
+            _ES_MONTH_RE = _re.compile(
+                r"\b(enero|febrero|marzo|abril|mayo|junio"
+                r"|julio|agosto|septiembre|octubre|noviembre|diciembre)\b",
+                flags=_re.IGNORECASE,
+            )
             # Strip English ordinal suffixes ("June 1st" → "June 1") so dateutil can parse them
             v_clean = _re.sub(r"(\d+)(st|nd|rd|th)\b", r"\1", v, flags=_re.IGNORECASE)
             if _ISO_RE.match(v_clean):
                 # Pure ISO 8601 — parse without dayfirst to avoid day/month swap
                 parsed = _parse_date(v_clean).date()
-            elif _re.search(r"\b(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)\b", v_clean, flags=_re.IGNORECASE):
+            elif _ES_MONTH_RE.search(v_clean):
                 # Spanish month name present — use Spanish parser
-                parsed = _parse_date(v_clean, parserinfo=_SpanishParserInfo(dayfirst=True), fuzzy=True).date()
+                parsed = _parse_date(
+                    v_clean, parserinfo=_SpanishParserInfo(dayfirst=True), fuzzy=True
+                ).date()
             else:
                 # English / numeric — default parser, dayfirst still on for "1/6/2026" → June 1
                 parsed = _parse_date(v_clean, dayfirst=True, fuzzy=True).date()
@@ -276,7 +274,7 @@ def handle_complete_screening(
             "qualified": qualified_flag,
             "summary": args.summary,
             "status": "completed",
-            "ended_at": datetime.now(timezone.utc).isoformat(),
+            "ended_at": datetime.now(UTC).isoformat(),
         },
     )
     return {"ok": True}

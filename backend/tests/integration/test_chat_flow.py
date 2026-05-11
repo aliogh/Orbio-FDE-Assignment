@@ -11,7 +11,6 @@ from fastapi.testclient import TestClient
 from main import create_app
 from persistence.db import get_client
 
-
 pytestmark = pytest.mark.integration
 
 

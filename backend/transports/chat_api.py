@@ -40,7 +40,7 @@ def chat(req: ChatRequest) -> ChatResponse:
 
     try:
         result = run_turn(conversation_id=cid, history=history)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         raise HTTPException(status_code=500, detail=f"agent error: {exc}") from exc
 
     return ChatResponse(

@@ -146,7 +146,7 @@ def run_turn(
                 else:
                     try:
                         result = handler(ctx, args)
-                    except Exception as exc:  # noqa: BLE001 — surface to model
+                    except Exception as exc:
                         result = {"ok": False, "error": str(exc)}
 
                 aggregated_tool_calls.append({

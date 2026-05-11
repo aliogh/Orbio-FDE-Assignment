@@ -1,7 +1,7 @@
 """Tests for the service-area fuzzy matcher."""
 from __future__ import annotations
 
-from agent_core.service_areas import MatchResult, match_city, load_service_areas
+from agent_core.service_areas import MatchResult, load_service_areas, match_city
 
 
 class TestLoadServiceAreas:
