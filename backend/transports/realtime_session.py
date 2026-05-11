@@ -65,7 +65,10 @@ def voice_session() -> VoiceSessionResponse:
             "create_response": True,
             "interrupt_response": True,
         },
-        "input_audio_transcription": {"model": "whisper-1", "language": "es"},
+        # No "language" lock — agent must support ES↔EN code-switching natively.
+        # The audio model handles language directly over WebRTC; this transcription
+        # is only used for diagnostics + the recruiter transcript view.
+        "input_audio_transcription": {"model": "whisper-1"},
     }
 
     response = httpx.post(
