@@ -44,6 +44,7 @@ jobs:
             --region=${{ secrets.GCP_REGION }} \
             --platform=managed \
             --allow-unauthenticated \
+            --service-account=${{ secrets.GCP_DEPLOYER_SA }} \
             --set-env-vars="ALLOWED_ORIGINS=${{ secrets.ALLOWED_ORIGINS }},OPENAI_CHAT_MODEL=gpt-5-mini,OPENAI_REALTIME_MODEL=gpt-realtime-mini,ENV=production" \
             --set-secrets="OPENAI_API_KEY=openai-api-key:latest,SUPABASE_URL=supabase-url:latest,SUPABASE_SERVICE_ROLE_KEY=supabase-service-role-key:latest" \
             --min-instances=0 \
