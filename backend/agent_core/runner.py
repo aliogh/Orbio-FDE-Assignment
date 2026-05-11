@@ -5,7 +5,9 @@ directly with the same tool schemas registered in the session."""
 from __future__ import annotations
 
 import json
+import logging
 import os
+import time
 from dataclasses import dataclass
 from functools import lru_cache
 from typing import Any
@@ -18,6 +20,9 @@ from agent_core.tools import HANDLERS, OPENAI_TOOL_SCHEMAS, ToolContext
 from persistence import conversations as persistence
 
 MAX_TOOL_ITERATIONS = 6  # Hard cap so a misbehaving model can't loop forever.
+
+logger = logging.getLogger("agent_core.runner")
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
 
 
 @lru_cache(maxsize=1)
@@ -95,14 +100,24 @@ def run_turn(
     aggregated_tool_calls: list[dict[str, Any]] = []
     completed = False
 
-    for _ in range(MAX_TOOL_ITERATIONS):
+    turn_start = time.perf_counter()
+    logger.info("turn.start cid=%s model=%s history_len=%d", conversation_id, model, len(history))
+
+    for iteration in range(MAX_TOOL_ITERATIONS):
+        oai_start = time.perf_counter()
         completion = client.chat.completions.create(
             model=model,
             messages=messages,
             tools=OPENAI_TOOL_SCHEMAS,
             tool_choice="auto",
         )
+        oai_elapsed = time.perf_counter() - oai_start
         msg = completion.choices[0].message
+        tool_count = len(msg.tool_calls) if msg.tool_calls else 0
+        logger.info(
+            "turn.iter=%d openai_ms=%d tool_calls=%d",
+            iteration, int(oai_elapsed * 1000), tool_count,
+        )
 
         if msg.tool_calls:
             # Append the assistant message that requested tools (OpenAI requires this).
@@ -121,6 +136,7 @@ def run_turn(
                     for tc in msg.tool_calls
                 ],
             })
+            tools_start = time.perf_counter()
             for tc in msg.tool_calls:
                 name = tc.function.name
                 args = json.loads(tc.function.arguments or "{}")
@@ -144,6 +160,8 @@ def run_turn(
                     "tool_call_id": tc.id,
                     "content": json.dumps(result),
                 })
+            tools_elapsed = time.perf_counter() - tools_start
+            logger.info("turn.tools_ms=%d count=%d", int(tools_elapsed * 1000), tool_count)
             # Loop again so the model can react to tool results
             continue
 
@@ -176,6 +194,11 @@ def run_turn(
             role="assistant",
             content=final_text,
             tool_calls=aggregated_tool_calls or None,
+        )
+        total_ms = int((time.perf_counter() - turn_start) * 1000)
+        logger.info(
+            "turn.done cid=%s total_ms=%d iters=%d tool_calls=%d completed=%s",
+            conversation_id, total_ms, iteration + 1, len(aggregated_tool_calls), completed,
         )
         return RunnerResult(
             assistant_message=final_text,
