@@ -28,7 +28,7 @@ export default function Home() {
             <div className="text-sm text-stone-500">Aplica con tu voz.</div>
           </Link>
           <Link
-            href="/recruiter/login"
+            href="/recruiter"
             className="rounded-2xl border border-stone-200 bg-white p-6 hover:shadow-md transition"
           >
             <div className="text-2xl mb-2">📋</div>
