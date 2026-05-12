@@ -1,0 +1,176 @@
+/* === Orbio FDE Design System Tokens ===
+   Source of truth for colors, type, radii, shadows shared across screens.
+   Aesthetic: Orbio greens (lime / signal) + sage neutrals + dark ink.
+*/
+
+:root {
+  /* Surfaces — Orbio dark base + sage neutrals */
+  --bg-cream:   #E8EFE4;   /* soft sage paper */
+  --bg-paper:   #F2F5EE;   /* lighter paper */
+  --bg-card:    #FFFFFF;
+  --bg-ink:     #0B0F0C;   /* near-black with a green undertone */
+  --bg-soot:    #161A17;
+
+  /* Lines / borders */
+  --line:        rgba(11, 15, 12, 0.08);
+  --line-strong: rgba(11, 15, 12, 0.14);
+
+  /* Type */
+  --ink:        #0B0F0C;
+  --ink-muted:  #5E6A60;
+  --ink-soft:   #94A097;
+  --ink-invert: #E8EFE4;
+
+  /* Accents — Orbio greens (lime / signal green) */
+  --accent:        oklch(0.88 0.20 135);
+  --accent-deep:   oklch(0.72 0.22 138);
+  --accent-soft:   oklch(0.94 0.08 140);
+  --moss:          oklch(0.72 0.22 138);
+  --moss-soft:     oklch(0.93 0.06 142);
+
+  /* Radii */
+  --r-xs:  6px;
+  --r-sm:  10px;
+  --r-md:  14px;
+  --r-lg:  20px;
+  --r-xl:  28px;
+  --r-full: 999px;
+
+  /* Type families — wired through next/font in layout.tsx */
+  --font-sans:    var(--font-geist-sans), "Söhne", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-serif:   var(--font-instrument-serif), "Times New Roman", serif;
+  --font-mono:    var(--font-geist-mono), "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* Shadow */
+  --shadow-card:  0 1px 0 rgba(14,13,11,0.04), 0 8px 24px -8px rgba(14,13,11,0.10);
+  --shadow-lift:  0 1px 0 rgba(14,13,11,0.04), 0 24px 48px -16px rgba(14,13,11,0.18);
+}
+
+/* Reset-ish base for app surfaces using the design system */
+.ds-base {
+  font-family: var(--font-sans);
+  font-feature-settings: "ss01", "cv11";
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+.ds-base * { box-sizing: border-box; }
+.ds-base button { font-family: inherit; }
+
+/* === Re-usable bits === */
+
+.orbio-mark {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  font-size: 22px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink);
+}
+.orbio-mark::before {
+  content: "";
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 65% 65%, var(--accent) 0%, transparent 55%),
+    var(--bg-ink);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.06),
+    0 0 0 0 rgba(0,0,0,0);
+}
+
+.sazon-mark {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 18px;
+  letter-spacing: 0.01em;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  color: var(--ink);
+}
+.sazon-mark .sazon-pepper {
+  font-family: var(--font-sans);
+  font-style: normal;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  align-self: center;
+}
+
+.sazon-drop {
+  width: 28px;
+  height: 28px;
+  position: relative;
+  display: inline-block;
+}
+.sazon-drop svg { width: 100%; height: 100%; display: block; }
+
+.ds-btn {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 15px;
+  letter-spacing: -0.005em;
+  border: 0;
+  border-radius: var(--r-full);
+  padding: 12px 22px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: transform 0.12s ease, background 0.18s, color 0.18s, box-shadow 0.18s;
+}
+.ds-btn:active { transform: translateY(0.5px); }
+.ds-btn:disabled { cursor: default; opacity: 0.6; }
+.ds-btn--primary { background: var(--bg-ink); color: var(--ink-invert); }
+.ds-btn--primary:hover:not(:disabled) { background: #2A2723; }
+.ds-btn--ghost { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1px var(--line-strong); }
+.ds-btn--ghost:hover:not(:disabled) { background: rgba(14,13,11,0.04); }
+.ds-btn--accent { background: var(--accent); color: var(--bg-ink); }
+.ds-btn--accent:hover:not(:disabled) { background: var(--accent-deep); color: var(--ink-invert); }
+
+.ds-field {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  width: 100%;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--line-strong);
+  padding: 14px 2px;
+  color: var(--ink);
+  outline: none;
+  transition: border-color 0.18s;
+}
+.ds-field::placeholder { color: var(--ink-soft); }
+.ds-field:focus { border-color: var(--ink); }
+
+.ds-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.ds-display {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  letter-spacing: -0.035em;
+  line-height: 0.96;
+}
+
+/* Animations shared across app */
+@keyframes orbioDot {
+  0%, 60%, 100% { transform: translateY(0) scale(1); opacity: 0.4; }
+  30% { transform: translateY(-4px) scale(1.15); opacity: 1; background: var(--accent-deep); }
+}
+
+@keyframes orbioWave {
+  0%, 100% { transform: scaleY(0.4); }
+  50%      { transform: scaleY(1.0); }
+}
