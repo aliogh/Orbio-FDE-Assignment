@@ -4,6 +4,7 @@ same handlers the chat path uses, so voice conversations persist identically
 to chat conversations."""
 from __future__ import annotations
 
+import contextlib
 import os
 from datetime import UTC, datetime
 from typing import Any
@@ -15,8 +16,8 @@ from pydantic import BaseModel, Field
 from agent_core.prompts import SYSTEM_PROMPT
 from agent_core.tools import HANDLERS, OPENAI_TOOL_SCHEMAS, ToolContext
 from persistence import conversations as persistence
-from persistence.db import get_client
 from persistence.conversations import start_conversation
+from persistence.db import get_client
 
 router = APIRouter()
 
@@ -133,20 +134,18 @@ def voice_tool(req: VoiceToolRequest) -> dict[str, Any]:
         return {"ok": False, "error": f"unknown tool {req.name}"}
     try:
         result = handler(ctx, req.args)
-    except Exception as exc:  # noqa: BLE001 — surface to model
+    except Exception as exc:
         return {"ok": False, "error": str(exc)}
 
     # Mirror the voice tool call into the turns table for the recruiter
-    # transcript view. We log each tool as its own assistant-style entry.
-    try:
+    # transcript view (best-effort — don't fail the request if logging breaks).
+    with contextlib.suppress(Exception):
         persistence.append_turn(
             conversation_id=req.conversation_id,
             role="tool",
             content=None,
             tool_calls=[{"name": req.name, "args": req.args, "result": result}],
         )
-    except Exception:  # noqa: BLE001 — turn logging is best-effort
-        pass
 
     return result
 
