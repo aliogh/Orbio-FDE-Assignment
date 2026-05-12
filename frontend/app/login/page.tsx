@@ -55,27 +55,9 @@ function LoginForm() {
   const labelFloated = focused || pw.length > 0;
 
   return (
-    <main
-      className="ds-base"
-      style={{
-        minHeight: "100vh",
-        display: "grid",
-        gridTemplateColumns: "1.05fr 1fr",
-        background: "var(--bg-paper)",
-      }}
-    >
+    <main className="ds-base login-shell">
       {/* === Left: brand stage === */}
-      <section
-        style={{
-          position: "relative",
-          background: "var(--bg-ink)",
-          color: "var(--ink-invert)",
-          padding: "40px 44px 32px",
-          display: "flex",
-          flexDirection: "column",
-          overflow: "hidden",
-        }}
-      >
+      <section className="login-stage">
         {/* soft green glow */}
         <div
           aria-hidden
@@ -144,7 +126,7 @@ function LoginForm() {
             01 — Welcome
           </div>
           <h1
-            className="ds-display"
+            className="ds-display login-display"
             style={{ fontSize: "clamp(40px, 6vw, 64px)", color: "var(--ink-invert)" }}
           >
             Orbio{" "}
@@ -191,6 +173,7 @@ function LoginForm() {
             Submitted by
           </div>
           <div
+            className="login-signature"
             style={{
               fontFamily: "var(--font-serif)",
               fontSize: 30,
@@ -206,26 +189,9 @@ function LoginForm() {
       </section>
 
       {/* === Right: form === */}
-      <section
-        style={{
-          position: "relative",
-          padding: "56px 64px",
-          display: "flex",
-          flexDirection: "column",
-          background: "var(--bg-paper)",
-        }}
-      >
-        {/* Sazón crest pinned top-right */}
-        <div
-          style={{
-            position: "absolute",
-            top: 32,
-            right: 40,
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-          }}
-        >
+      <section className="login-pane">
+        {/* Sazón crest — pinned top-right on desktop, inline at top on mobile */}
+        <div className="login-sazon-crest">
           <SazonDrop />
           <div style={{ lineHeight: 1.1 }}>
             <div
@@ -247,12 +213,12 @@ function LoginForm() {
           </div>
         </div>
 
-        <form onSubmit={submit} style={{ marginTop: "auto" }}>
+        <form onSubmit={submit} className="login-form" style={{ marginTop: "auto" }}>
           <div className="ds-eyebrow" style={{ marginBottom: 14 }}>
             Sign in
           </div>
           <h2
-            className="ds-display"
+            className="ds-display login-heading"
             style={{ fontSize: 38, marginBottom: 8 }}
           >
             Private demo.
