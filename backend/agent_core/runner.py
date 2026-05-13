@@ -15,9 +15,23 @@ from typing import Any
 from openai import OpenAI
 
 from agent_core import guardrails
+from agent_core.language import detect_for_turn
 from agent_core.prompts import SYSTEM_PROMPT
 from agent_core.tools import HANDLERS, OPENAI_TOOL_SCHEMAS, ToolContext
 from persistence import conversations as persistence
+
+_LANG_OVERRIDE = {
+    "es": (
+        "REGLA DE IDIOMA — TURNO ACTUAL: La última intervención del candidato "
+        "está en español. Tu respuesta debe estar 100% en español. Esta regla "
+        "anula cualquier idioma usado en turnos anteriores."
+    ),
+    "en": (
+        "LANGUAGE RULE — CURRENT TURN: The candidate's most recent message is "
+        "in English. Your reply must be 100% in English. This rule overrides "
+        "whatever language earlier turns used."
+    ),
+}
 
 MAX_TOOL_ITERATIONS = 6  # Hard cap so a misbehaving model can't loop forever.
 
@@ -95,13 +109,22 @@ def run_turn(
 
     messages: list[dict[str, Any]] = [{"role": "system", "content": SYSTEM_PROMPT}]
     messages.extend(history)
+    # Per-turn language override. Without this the model over-anchors on
+    # whichever language the conversation started in and ignores the
+    # candidate's mid-conversation switch even though the system prompt
+    # tells it to mirror. Detection is stop-word based (see language.py).
+    turn_lang = detect_for_turn(history)
+    messages.append({"role": "system", "content": _LANG_OVERRIDE[turn_lang]})
 
     ctx = ToolContext(conversation_id=conversation_id)
     aggregated_tool_calls: list[dict[str, Any]] = []
     completed = False
 
     turn_start = time.perf_counter()
-    logger.info("turn.start cid=%s model=%s history_len=%d", conversation_id, model, len(history))
+    logger.info(
+        "turn.start cid=%s model=%s history_len=%d lang=%s",
+        conversation_id, model, len(history), turn_lang,
+    )
 
     for iteration in range(MAX_TOOL_ITERATIONS):
         oai_start = time.perf_counter()

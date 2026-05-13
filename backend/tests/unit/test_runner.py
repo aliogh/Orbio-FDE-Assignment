@@ -85,6 +85,39 @@ class TestRunTurn:
         assert len(result.tool_calls) == 1
         assert result.tool_calls[0]["name"] == "record_field"
 
+    def test_injects_english_language_override_when_user_switches(
+        self, fake_openai: MagicMock, fake_persistence: MagicMock
+    ) -> None:
+        fake_openai.chat.completions.create.return_value.choices = [
+            MagicMock(message=_msg("assistant", "Sure, what's your name?"))
+        ]
+        run_turn(
+            conversation_id="conv-1",
+            history=[
+                {"role": "user", "content": "Hola, soy Ana"},
+                {"role": "assistant", "content": "¿En qué ciudad vives?"},
+                {"role": "user", "content": "Actually can we continue in English"},
+            ],
+        )
+        kwargs = fake_openai.chat.completions.create.call_args.kwargs
+        # Language override is the LAST system message so it wins on
+        # turn-level constraints.
+        assert kwargs["messages"][-1]["role"] == "system"
+        assert "100% in English" in kwargs["messages"][-1]["content"]
+
+    def test_injects_spanish_language_override_by_default(
+        self, fake_openai: MagicMock, fake_persistence: MagicMock
+    ) -> None:
+        fake_openai.chat.completions.create.return_value.choices = [
+            MagicMock(message=_msg("assistant", "Hola"))
+        ]
+        run_turn(
+            conversation_id="conv-1",
+            history=[{"role": "user", "content": "Hola soy Ana de Madrid"}],
+        )
+        kwargs = fake_openai.chat.completions.create.call_args.kwargs
+        assert "100% en español" in kwargs["messages"][-1]["content"]
+
     def test_guardrail_rejects_input(
         self, fake_openai: MagicMock, fake_persistence: MagicMock
     ) -> None:
