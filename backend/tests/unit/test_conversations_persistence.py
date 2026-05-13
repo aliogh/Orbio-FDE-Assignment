@@ -46,3 +46,22 @@ class TestUpdateConversation:
         assert update_call.called
         args, _ = update_call.call_args
         assert args[0] == {"qualified": True, "summary": "Looks good"}
+
+
+class TestSweepStale:
+    def test_calls_rpc_with_minutes_and_returns_count(self, fake_client: MagicMock) -> None:
+        fake_client.rpc.return_value.execute.return_value.data = 7
+        n = conv.sweep_stale(minutes=5)
+        assert n == 7
+        fake_client.rpc.assert_called_once_with(
+            "sweep_stale_conversations", {"p_minutes": 5}
+        )
+
+    def test_defaults_to_5_minutes(self, fake_client: MagicMock) -> None:
+        fake_client.rpc.return_value.execute.return_value.data = 0
+        conv.sweep_stale()
+        assert fake_client.rpc.call_args.args[1] == {"p_minutes": 5}
+
+    def test_returns_zero_when_rpc_data_is_none(self, fake_client: MagicMock) -> None:
+        fake_client.rpc.return_value.execute.return_value.data = None
+        assert conv.sweep_stale(minutes=15) == 0

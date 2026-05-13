@@ -24,6 +24,24 @@ export async function postChat(args: {
   return res.json();
 }
 
+export async function postChatNudge(args: {
+  conversationId: string;
+  history: ChatHistoryTurn[];
+  nudgeCount: 1 | 2;
+}): Promise<{ assistant_message: string; nudge_count: number }> {
+  const res = await fetch(`${BACKEND}/api/chat/nudge`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      conversation_id: args.conversationId,
+      history: args.history,
+      nudge_count: args.nudgeCount,
+    }),
+  });
+  if (!res.ok) throw new Error(`nudge failed: ${res.status}`);
+  return res.json();
+}
+
 export async function createVoiceSession(): Promise<VoiceSessionResponse> {
   const res = await fetch(`${BACKEND}/api/voice/session`, { method: "POST" });
   if (!res.ok) throw new Error(`voice session failed: ${res.status}`);

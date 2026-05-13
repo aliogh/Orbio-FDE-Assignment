@@ -8,8 +8,10 @@ from typing import Literal
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from agent_core.runner import run_turn
+from agent_core.runner import run_nudge_turn, run_turn
 from persistence.conversations import start_conversation
+
+MAX_NUDGES = 2
 
 router = APIRouter()
 
@@ -48,4 +50,42 @@ def chat(req: ChatRequest) -> ChatResponse:
         assistant_message=result.assistant_message,
         tool_calls=result.tool_calls,
         completed=result.completed,
+    )
+
+
+class NudgeRequest(BaseModel):
+    conversation_id: str = Field(..., min_length=1)
+    history: list[HistoryTurn] = Field(default_factory=list)
+    nudge_count: int = Field(..., ge=1, le=MAX_NUDGES)
+
+
+class NudgeResponse(BaseModel):
+    conversation_id: str
+    assistant_message: str
+    nudge_count: int
+
+
+@router.post("/api/chat/nudge", response_model=NudgeResponse)
+def chat_nudge(req: NudgeRequest) -> NudgeResponse:
+    """Soft re-engagement after the candidate has been idle. The client tracks
+    the timer + the running `nudge_count`; this endpoint just runs the nudge
+    turn through the model with tools disabled and persists the assistant
+    reply flagged as a nudge. After `MAX_NUDGES` the client should stop
+    calling and let the 5-min sweep close the conversation."""
+    history = [t.model_dump() for t in req.history]
+    try:
+        result = run_nudge_turn(
+            conversation_id=req.conversation_id,
+            history=history,
+            nudge_count=req.nudge_count,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"nudge error: {exc}") from exc
+
+    return NudgeResponse(
+        conversation_id=req.conversation_id,
+        assistant_message=result.assistant_message,
+        nudge_count=req.nudge_count,
     )

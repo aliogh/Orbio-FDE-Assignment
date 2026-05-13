@@ -1,10 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { postChat } from "@/lib/api";
+import { postChat, postChatNudge } from "@/lib/api";
 import type { ChatHistoryTurn } from "@/lib/types";
 
 const SESSION_ID = "4F2A";
+const IDLE_NUDGE_MS = 30_000;
+const MAX_NUDGES = 2;
 
 function AgentAvatar({ size = 38 }: { size?: number }) {
   return (
@@ -124,6 +127,15 @@ export default function ChatUI() {
   const [busy, setBusy] = useState(false);
   const [completed, setCompleted] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  // Nudge state lives in refs so the idle effect can read the latest values
+  // without re-subscribing every time they change. nudgeCount resets to 0
+  // whenever the candidate sends a turn (they're engaged again).
+  const nudgeCountRef = useRef(0);
+  const historyRef = useRef(history);
+
+  useEffect(() => {
+    historyRef.current = history;
+  }, [history]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({
@@ -132,6 +144,32 @@ export default function ChatUI() {
     });
   }, [history, busy]);
 
+  // Idle re-engagement: 60s after the agent's last reply (and reset on every
+  // keystroke), POST /api/chat/nudge to have the agent check in. Capped at
+  // MAX_NUDGES; after that the 5-min sweep handles abandonment.
+  useEffect(() => {
+    if (busy || completed || !conversationId) return;
+    if (nudgeCountRef.current >= MAX_NUDGES) return;
+    const t = setTimeout(async () => {
+      const nextCount = (nudgeCountRef.current + 1) as 1 | 2;
+      try {
+        const res = await postChatNudge({
+          conversationId,
+          history: historyRef.current,
+          nudgeCount: nextCount,
+        });
+        nudgeCountRef.current = nextCount;
+        setHistory((prev) => [
+          ...prev,
+          { role: "assistant", content: res.assistant_message },
+        ]);
+      } catch {
+        /* best-effort — silent on nudge failure */
+      }
+    }, IDLE_NUDGE_MS);
+    return () => clearTimeout(t);
+  }, [history, busy, completed, conversationId, input]);
+
   async function send() {
     if (!input.trim() || busy || completed) return;
     const userTurn: ChatHistoryTurn = { role: "user", content: input.trim() };
@@ -139,6 +177,7 @@ export default function ChatUI() {
     setHistory(next);
     setInput("");
     setBusy(true);
+    nudgeCountRef.current = 0;  // user re-engaged → reset the counter
     try {
       const res = await postChat({
         message: userTurn.content,
@@ -188,6 +227,22 @@ export default function ChatUI() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <Link
+            href="/"
+            aria-label="Volver al inicio"
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: 12,
+              color: "var(--ink-muted)",
+              textDecoration: "none",
+              padding: "4px 8px",
+              borderRadius: "var(--r-full)",
+              border: "1px solid var(--line)",
+              transition: "background 0.15s, color 0.15s",
+            }}
+          >
+            ← Inicio
+          </Link>
           <span className="orbio-mark" style={{ fontSize: 18 }}>
             Orbio
           </span>

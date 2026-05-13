@@ -42,3 +42,16 @@ def update_conversation(*, conversation_id: str, patch: dict[str, Any]) -> None:
     column → value; we don't filter, so misuse is on the caller."""
     client = get_client()
     client.table("conversations").update(patch).eq("id", conversation_id).execute()
+
+
+def sweep_stale(minutes: int = 5) -> int:
+    """Flip every `in_progress` conversation with no activity in the last
+    `minutes` minutes to `abandoned` and stamp `ended_at`. Returns the number
+    of rows swept.
+
+    Drives the drop-off janitor (#0003 migration). The DB trigger on `turns`
+    keeps `last_activity_at` fresh, so the sweep needs no application-side
+    bookkeeping — it just calls the SQL function."""
+    client = get_client()
+    result = client.rpc("sweep_stale_conversations", {"p_minutes": minutes}).execute()
+    return int(result.data or 0)

@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from agent_core.runner import RunnerResult, run_turn
+from agent_core.runner import RunnerResult, run_nudge_turn, run_turn
 
 
 @pytest.fixture
@@ -96,3 +96,87 @@ class TestRunTurn:
             or "tema" in result.assistant_message.lower()
         # OpenAI not called at all when input is rejected
         fake_openai.chat.completions.create.assert_not_called()
+
+
+class TestRunNudgeTurn:
+    def test_first_nudge_runs_with_tools_disabled(
+        self, fake_openai: MagicMock, fake_persistence: MagicMock
+    ) -> None:
+        fake_openai.chat.completions.create.return_value.choices = [
+            MagicMock(message=_msg("assistant", "¿Sigues ahí, Ana?"))
+        ]
+        result = run_nudge_turn(
+            conversation_id="conv-1",
+            history=[
+                {"role": "assistant", "content": "Hola, ¿cómo te llamas?"},
+                {"role": "user", "content": "Soy Ana"},
+                {"role": "assistant", "content": "¿En qué ciudad vives?"},
+            ],
+            nudge_count=1,
+        )
+        assert result.assistant_message == "¿Sigues ahí, Ana?"
+        assert result.completed is False
+        assert result.tool_calls == []
+        # Tools are omitted entirely so the model literally can't fire
+        # record_field on phantom user input. (tool_choice="none" without a
+        # `tools` array 400s on some OpenAI models — see runner.py.)
+        kwargs = fake_openai.chat.completions.create.call_args.kwargs
+        assert "tools" not in kwargs
+        assert "tool_choice" not in kwargs
+        # Last system message is the nudge instruction (overrides for this turn).
+        assert kwargs["messages"][-1]["role"] == "system"
+        assert "30 segundos" in kwargs["messages"][-1]["content"]
+
+    def test_assistant_turn_persisted_with_nudge_flag(
+        self, fake_openai: MagicMock, fake_persistence: MagicMock
+    ) -> None:
+        fake_openai.chat.completions.create.return_value.choices = [
+            MagicMock(message=_msg("assistant", "¿Sigues por ahí?"))
+        ]
+        run_nudge_turn(
+            conversation_id="conv-1",
+            history=[{"role": "assistant", "content": "Hola"}],
+            nudge_count=1,
+        )
+        kwargs = fake_persistence.append_turn.call_args.kwargs
+        assert kwargs["role"] == "assistant"
+        assert kwargs["tool_calls"] == [{"nudge": True, "nudge_count": 1}]
+
+    def test_second_nudge_uses_softer_instruction(
+        self, fake_openai: MagicMock, fake_persistence: MagicMock
+    ) -> None:
+        fake_openai.chat.completions.create.return_value.choices = [
+            MagicMock(message=_msg("assistant", "Cuando estés listo, te leo."))
+        ]
+        run_nudge_turn(
+            conversation_id="conv-1",
+            history=[{"role": "assistant", "content": "Hola"}],
+            nudge_count=2,
+        )
+        kwargs = fake_openai.chat.completions.create.call_args.kwargs
+        # Second nudge text mentions it's the last invitation.
+        assert "última" in kwargs["messages"][-1]["content"]
+
+    def test_invalid_nudge_count_rejected(
+        self, fake_openai: MagicMock, fake_persistence: MagicMock
+    ) -> None:
+        with pytest.raises(ValueError, match="nudge_count"):
+            run_nudge_turn(
+                conversation_id="conv-1",
+                history=[{"role": "assistant", "content": "Hola"}],
+                nudge_count=3,
+            )
+        fake_openai.chat.completions.create.assert_not_called()
+
+    def test_returns_runner_result_type(
+        self, fake_openai: MagicMock, fake_persistence: MagicMock
+    ) -> None:
+        fake_openai.chat.completions.create.return_value.choices = [
+            MagicMock(message=_msg("assistant", "?"))
+        ]
+        result = run_nudge_turn(
+            conversation_id="c",
+            history=[{"role": "assistant", "content": "Hola"}],
+            nudge_count=1,
+        )
+        assert isinstance(result, RunnerResult)

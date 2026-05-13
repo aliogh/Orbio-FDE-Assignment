@@ -219,3 +219,72 @@ def run_turn(
         tool_calls=aggregated_tool_calls,
         completed=False,
     )
+
+
+_NUDGE_INSTRUCTIONS = {
+    1: (
+        "El candidato lleva ~30 segundos sin responder. Hazle un check-in MUY "
+        "breve (una sola frase corta) en su idioma. Si conoces su nombre, "
+        "úsalo. NO saludes de nuevo, NO repitas la introducción. Repite o "
+        "parafrasea la última pregunta pendiente. No invoques ninguna "
+        "herramienta en este turno."
+    ),
+    2: (
+        "El candidato sigue sin responder tras tu primer check-in. Esta es "
+        "tu segunda y última invitación. Sé MUY breve, en su idioma: dile "
+        "amablemente que te puede escribir cuando esté listo y que "
+        "mantienes la última pregunta abierta. NO saludes, NO repitas la "
+        "pregunta entera. No invoques ninguna herramienta."
+    ),
+}
+
+
+def run_nudge_turn(
+    *,
+    conversation_id: str,
+    history: list[dict[str, Any]],
+    nudge_count: int,
+) -> RunnerResult:
+    """Generate a soft re-engagement message after the candidate has been
+    idle past the client-side threshold. Persisted as an assistant turn
+    flagged with `tool_calls: [{"nudge": true, "nudge_count": N}]` so the
+    recruiter view can render it differently. No user turn is appended;
+    the model is run with `tool_choice="none"` because the candidate hasn't
+    actually said anything that would record a field."""
+    if nudge_count not in _NUDGE_INSTRUCTIONS:
+        raise ValueError(f"nudge_count must be 1 or 2, got {nudge_count}")
+
+    client = get_openai()
+    model = os.getenv("OPENAI_CHAT_MODEL", "gpt-5-mini")
+
+    messages: list[dict[str, Any]] = [{"role": "system", "content": SYSTEM_PROMPT}]
+    messages.extend(history)
+    # The nudge instruction is appended as a fresh system message at the END
+    # so it overrides any tone/format conventions from the main prompt for
+    # this single turn (per OpenAI guidance — later system messages win on
+    # turn-level constraints).
+    messages.append({"role": "system", "content": _NUDGE_INSTRUCTIONS[nudge_count]})
+
+    nudge_start = time.perf_counter()
+    # Deliberately omit `tools` and `tool_choice` so the model literally has
+    # no tool surface this turn (matches the original intent of preventing
+    # phantom record_field calls). Passing `tool_choice="none"` without a
+    # `tools` array 400s on gpt-5-mini, so we go the cleaner route.
+    completion = client.chat.completions.create(
+        model=model,
+        messages=messages,
+    )
+    nudge_ms = int((time.perf_counter() - nudge_start) * 1000)
+    text = guardrails.sanitize_output(completion.choices[0].message.content or "")
+
+    persistence.append_turn(
+        conversation_id=conversation_id,
+        role="assistant",
+        content=text,
+        tool_calls=[{"nudge": True, "nudge_count": nudge_count}],
+    )
+    logger.info(
+        "nudge.done cid=%s nudge_count=%d openai_ms=%d",
+        conversation_id, nudge_count, nudge_ms,
+    )
+    return RunnerResult(assistant_message=text, tool_calls=[], completed=False)

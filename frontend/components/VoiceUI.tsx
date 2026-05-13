@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { createVoiceSession, dispatchVoiceTool, endVoiceSession } from "@/lib/api";
 
@@ -13,6 +14,22 @@ const BAR_COUNT = 42;
 const SPEAKING_THRESHOLD = 0.06;
 const AGENT_COLOR = "oklch(0.85 0.20 138)";
 const USER_COLOR = "oklch(0.92 0.06 145)";
+const IDLE_NUDGE_MS = 30_000;
+const MAX_NUDGES = 2;
+// Per-nudge instructions injected via Realtime `response.create`. The model
+// gets the original SYSTEM_PROMPT at session-mint time, so these only need
+// to scope the single check-in turn.
+const NUDGE_INSTRUCTIONS: Record<1 | 2, string> = {
+  1:
+    "El candidato lleva ~30 segundos en silencio. Pregúntale brevemente si " +
+    "sigue ahí, en su idioma. Si conoces su nombre, úsalo. Una sola frase " +
+    "corta. NO saludes, NO repitas la introducción. Repite o parafrasea la " +
+    "última pregunta pendiente.",
+  2:
+    "El candidato sigue en silencio tras tu primer check-in. Sé MUY breve, " +
+    "en su idioma: dile amablemente que puedes esperar y que continúe " +
+    "cuando esté listo. NO saludes, NO repitas la pregunta entera.",
+};
 
 const iconBtnStyle: React.CSSProperties = {
   width: 48,
@@ -176,6 +193,14 @@ export default function VoiceUI() {
     Array(BAR_COUNT).fill(null),
   );
 
+  // Idle re-engagement: bumped every frame either side speaks. The rAF tick
+  // checks `Date.now() - lastVoiceActivityRef` against IDLE_NUDGE_MS and, up
+  // to MAX_NUDGES times, sends a Realtime `response.create` with a check-in
+  // instruction. After a nudge we bump the timestamp ourselves so the agent's
+  // ensuing reply doesn't immediately re-trigger the next window.
+  const lastVoiceActivityRef = useRef<number>(Date.now());
+  const nudgeCountRef = useRef<number>(0);
+
   // Elapsed timer
   useEffect(() => {
     if (phase !== "live") return;
@@ -275,6 +300,36 @@ export default function VoiceUI() {
         setActiveSpeaker(next);
       }
 
+      // Idle re-engagement: any speech (either side) bumps the activity
+      // marker. After IDLE_NUDGE_MS of mutual silence we send a Realtime
+      // `response.create` with a check-in instruction. The bump-after-fire
+      // gives the agent a fresh window to respond before we'd nudge again.
+      if (aSpeaking || uSpeaking) {
+        lastVoiceActivityRef.current = Date.now();
+      } else if (
+        nudgeCountRef.current < MAX_NUDGES &&
+        dcRef.current?.readyState === "open" &&
+        Date.now() - lastVoiceActivityRef.current > IDLE_NUDGE_MS
+      ) {
+        const nextCount = (nudgeCountRef.current + 1) as 1 | 2;
+        try {
+          dcRef.current.send(
+            JSON.stringify({
+              type: "response.create",
+              response: {
+                modalities: ["audio", "text"],
+                instructions: NUDGE_INSTRUCTIONS[nextCount],
+              },
+            }),
+          );
+          nudgeCountRef.current = nextCount;
+          lastVoiceActivityRef.current = Date.now();
+          console.log("[realtime] nudge.sent", { nudge_count: nextCount });
+        } catch (err) {
+          console.warn("[realtime] nudge.send_failed", err);
+        }
+      }
+
       // Throttle level state updates — only commit when the change is large
       // enough to matter for the dB readout (avoids per-frame React renders).
       if (Math.abs(aLevel - lastAgentLevel) > 0.02) {
@@ -310,6 +365,8 @@ export default function VoiceUI() {
     setPhase("connecting");
     setErrMsg(null);
     setElapsed(0);
+    nudgeCountRef.current = 0;
+    lastVoiceActivityRef.current = Date.now();
     const sessionT0 = performance.now();
     try {
       const session = await createVoiceSession();
@@ -532,6 +589,22 @@ export default function VoiceUI() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <Link
+            href="/"
+            aria-label="Volver al inicio"
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: 12,
+              color: "rgba(232,239,228,0.7)",
+              textDecoration: "none",
+              padding: "4px 8px",
+              borderRadius: "var(--r-full)",
+              border: "1px solid rgba(232,239,228,0.18)",
+              transition: "background 0.15s, color 0.15s",
+            }}
+          >
+            ← Inicio
+          </Link>
           <span className="orbio-mark" style={{ color: "var(--ink-invert)" }}>
             Orbio
           </span>

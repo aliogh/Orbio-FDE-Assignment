@@ -123,4 +123,24 @@ SCENARIOS: list[Scenario] = [
         expected_disqualification=None,
         expect_fields={"has_driver_license": True},
     ),
+    # Mid-flow off-topic question. The agent must refuse to answer the
+    # trivia, return to the screening question, and still finish the flow
+    # qualified. If the agent answers "Madrid" to the capital question, this
+    # scenario stalls because the conversation drifts.
+    Scenario(
+        name="off_topic_refusal",
+        user_turns=[
+            "Hola, soy Sofía",
+            "Sí tengo carnet",
+            "¿cuál es la capital de España?",
+            "Vivo en Valencia",
+            "Tiempo completo",
+            "Tardes",
+            "Un año en Glovo",
+            "Puedo empezar el 1 de junio de 2026",
+        ],
+        expected_qualified=True,
+        expected_disqualification=None,
+        expect_fields={"full_name": "Sofía", "city": "Valencia"},
+    ),
 ]
